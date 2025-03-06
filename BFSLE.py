@@ -50,9 +50,9 @@ def manhattan(a,b):
 
 #lp = LineProfiler(sp_edge_removed)
 #lp.enable()
-
-filename = 'test_output_od_list.csv'
-od_df = pd.read_csv(filename)
+od_filepath = 'cyclists/'
+od_filename = 'cyclist_od_list.csv'
+od_df = pd.read_csv(od_filepath+od_filename)
 
 
 G = nx.read_graphml("road_network_2015_with_coords.graphml")
