@@ -5,10 +5,13 @@ import csv
 from datetime import datetime
 import time
 from line_profiler import LineProfiler
-
-
+from utils import *
 
 tik=time.time()
+output_path = 'choice_set/'
+error_id_path = 'choice_set/Past Error ID/'
+check_dir(output_path)
+check_dir(error_id_path)
 
 #TODO:add action to sp_edge_removed: look to improve function by containing more actions that are repeated
 def sp_edge_removed(graph, edges_list: list[tuple], od_tup: tuple[str]): #this function will take a graph, a list of tups of nodes that define an edge, and an tup of OD IDs, it will remove the edge from the graph and output the shortest path between ODs on the new graph. it will also output the dictionary to be stored in the dictionary that contains all graphs and removed edges
@@ -52,7 +55,7 @@ filename = 'test_output_od_list.csv'
 od_df = pd.read_csv(filename)
 
 
-G = nx.read_graphml("road_netowrk_2015_with_coords.graphml")
+G = nx.read_graphml("road_network_2015_with_coords.graphml")
 
 #print(nx.shortest_path(G,'22518','29879'))
 
@@ -134,7 +137,7 @@ for index, row in od_df.iterrows(): #iterate over every GPS trace and OD pair to
         error_id[row['cyclist_id']] = f'choice set size, {len(sp_list)}'
         short_set_count+=1
 
-    output_path = 'choice set/'
+
     choice_set_filename = f"{row['cyclist_id']}_choice_set.json"
     print(f"{row['cyclist_id']}_choice_set.json")
     with open(output_path+choice_set_filename, 'w') as file:
@@ -143,9 +146,10 @@ for index, row in od_df.iterrows(): #iterate over every GPS trace and OD pair to
         break
 
 current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-error_id_filename = f'choice set/Past Error ID/error_ids_{current_time}.csv'
 
-with open(error_id_filename, mode='w', newline='') as file:
+error_id_filename = f'error_ids_{current_time}.csv'
+
+with open((error_id_path+error_id_filename), mode='w', newline='') as file:
     writer = csv.writer(file)
     
     # Write header

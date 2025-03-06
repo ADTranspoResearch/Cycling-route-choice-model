@@ -131,7 +131,7 @@ for id_bk in bike_id_list:
     G.nodes[last_node]['x'] = last_x_corr
     G.nodes[last_node]['y'] = last_y_corr
 
-nx.write_graphml(G, "road_netowrk_2015_with_coords.graphml")
+nx.write_graphml(G, "road_network_2015_with_coords.graphml")
 print('written graph to memory')
 print(f'bike count: {bike_count}')
 print(f'no network count: {bike_count_no_network}')

@@ -5,7 +5,7 @@ import csv
 import ast
 import os
 from datetime import datetime
-
+from utils import *
 
 #cyclist with error: 1049 divide by zero, 19270 key error when loading JSON
 
@@ -82,15 +82,19 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
             }
     
 
-G = nx.read_graphml("road_netowrk_2015_with_coords.graphml")
+G = nx.read_graphml("road_network_2015_with_coords.graphml")
 
-choice_set_filepath = 'choice set/'
-database_filepath = 'shapefiles/2015 attemtp/road_properties_2015.csv'
+choice_set_filepath = 'choice_set/'
+database_filepath = 'shapefiles/2015_attempt/road_properties_2015.csv'
 cyclist_trajectory_filepath = 'cyclists/cyclists_trips.csv'
-output_filepath = 'choice properties/'
+output_filepath = 'choice_properties/'
+check_dir(output_filepath)
 lts_filepath = 'shapefiles/LTS_links.csv'
 demographics_filepath = 'demographics/MonResoVelo_user_anonyme.csv'
 db_df = pd.read_csv(database_filepath, index_col='ID_RD')
+error_filepath = 'choice_properties/error_log/'
+check_dir(error_filepath)
+
 
 chosen_path_df = pd.read_csv(cyclist_trajectory_filepath, index_col= 'id_origine')
 #chosen_path_df = chosen_path_df.dropna(axis=0, how='any')
@@ -218,9 +222,9 @@ for choice_set_file in trip_list:
         
 
 current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-error_id_filename = f'choice properties/error_log/error_ids_{current_time}.csv'
+error_id_filename = 'error_ids_{current_time}.csv'
 
-with open(error_id_filename, mode='w', newline='') as file:
+with open((error_filepath+error_id_filename), mode='w', newline='') as file:
     writer = csv.writer(file)
     
     # Write header

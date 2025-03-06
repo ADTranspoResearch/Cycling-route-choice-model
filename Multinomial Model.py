@@ -5,9 +5,13 @@ from sklearn.metrics import classification_report, confusion_matrix
 import os
 import joblib
 import matplotlib.pyplot as plt
+from utils import *
 
-directory_path = 'choice properties/'
-
+directory_path = 'choice_properties/'
+model_path = 'logit_models/'
+training_path = 'logit_models/model data/'
+check_dir(model_path)
+check_dir(training_path)
 model_name = 'while_loop_test'
 
 def distribution_hist(df, output_folder ):
@@ -82,8 +86,8 @@ y = final_df['chosen']  # Target variable (which alternative was chosen)
 standardize_columns(X, {'avg_ADT':'normal'})
 distribution_hist(X,'while_loop')
 
-
-final_df.to_csv(f'logit_models/model data/training_data_{model_name}.csv')
+#todo: checkdir
+final_df.to_csv((training_path+f'training_data_{model_name}.csv'))
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -106,4 +110,4 @@ print(classification_report(y_test, y_pred))
 print("Confusion Matrix:")
 print(confusion_matrix(y_test, y_pred))
 
-joblib.dump(model,f"logit_models/multinomial_logit_{model_name}.pkl")
+joblib.dump(model,model_path+f"multinomial_logit_{model_name}.pkl")
