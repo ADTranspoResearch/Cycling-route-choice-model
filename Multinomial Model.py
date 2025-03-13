@@ -6,6 +6,8 @@ import os
 import joblib
 import matplotlib.pyplot as plt
 from utils import *
+import numpy as np
+
 
 directory_path = 'choice_properties/'
 model_path = 'logit_models/'
@@ -23,7 +25,9 @@ def distribution_hist(df, output_folder ):
         plt.xlabel(col)
         plt.ylabel('Frequency')
         
-        file_name = f"visualization/{output_folder}/{col}_histogram.png"
+        filepath = f'visualization/{output_folder}/'
+        check_dir(filepath)
+        file_name = filepath+f"{col}_histogram.png"
         plt.savefig(file_name)
         plt.close() 
 
@@ -47,10 +51,23 @@ def standardize_columns(df, col_dict): # takes a dict of column names, where the
     
     return df_copy
 
+def check_infinity(list_df):
+    inf_df_indices = []
+    for i, df in enumerate(list_df):
+        # Convert all columns to numeric (to avoid type errors)
+        df_numeric = df.apply(pd.to_numeric, errors='coerce')
 
+        # Check if any infinity value exists
+        if np.isinf(df_numeric.to_numpy()).any():
+            inf_df_indices.append(index_dict[i])
+            del list_df[i]
+
+    # Output the indices
+    print("DataFrame indices containing infinity values:", inf_df_indices)
 
 df_list = []
-
+index_dict = {}
+i = 0
 # Loop through the files in the directory
 for filename in os.listdir(directory_path):
     if filename.endswith('.csv'):
@@ -66,9 +83,16 @@ for filename in os.listdir(directory_path):
         
         # Add a new column 'id' to the DataFrame
         df['user_id'] = id_number
-        
+        index_dict[i]=id_number
+        i+=1
         # Append the DataFrame to the list
         df_list.append(df)
+
+
+#checking infinity problem
+check_infinity(df_list)
+check_infinity(df_list)
+
 
 # Concatenate all DataFrames in the list into a single DataFrame
 final_df = pd.concat(df_list, ignore_index=True)
@@ -84,7 +108,8 @@ X = final_df[['avg_ADT','avg_Q85',#'avg_loe', 'avg_Q85_dist_w','avg_adt_dist_w',
 y = final_df['chosen']  # Target variable (which alternative was chosen)
 
 standardize_columns(X, {'avg_ADT':'normal'})
-distribution_hist(X,'while_loop')
+#distribution_hist(X,'while_loop')
+
 
 #todo: checkdir
 final_df.to_csv((training_path+f'training_data_{model_name}.csv'))
