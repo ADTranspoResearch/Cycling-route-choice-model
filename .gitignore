@@ -4,3 +4,4 @@ choice_properties/
 *.graphml
 
 visualization/
+logit_models/
