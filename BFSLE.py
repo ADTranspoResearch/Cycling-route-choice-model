@@ -67,7 +67,7 @@ choice_set_dict = {}
 
 error_id={}
 
-debug = True
+debug = False
 skiprows = False
 early_stop = False
 start_row = 820

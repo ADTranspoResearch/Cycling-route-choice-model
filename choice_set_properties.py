@@ -102,13 +102,13 @@ chosen_path_df = pd.read_csv(cyclist_trajectory_filepath, index_col= 'id_origine
 #chosen_path_df.index = chosen_path_df.index.astype(int)
 lts_df = pd.read_csv(lts_filepath, index_col = 'ID_TRC')
 
-demo_df = pd.read_csv(demographics_filepath, index_col='id', sep=';')
+demo_df = pd.read_csv(demographics_filepath, index_col='id', sep=';') #TODO:make demographics optional
 
 error_id={}
 
 trip_list = [f for f in os.listdir(choice_set_filepath) if os.path.isfile(os.path.join(choice_set_filepath, f))]
 
-debug = True
+debug = False
 late_start = False
 start_id = 19270
 for choice_set_file in trip_list:
