@@ -83,6 +83,9 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
     
 
 G = nx.read_graphml("road_network_2015_with_coords.graphml")
+add_demographics = False
+
+
 
 choice_set_filepath = 'choice_set/'
 database_filepath = 'shapefiles/2015_attempt/road_properties_2015.csv'
@@ -102,14 +105,16 @@ chosen_path_df = pd.read_csv(cyclist_trajectory_filepath, index_col= 'id_origine
 #chosen_path_df.index = chosen_path_df.index.astype(int)
 lts_df = pd.read_csv(lts_filepath, index_col = 'ID_TRC')
 
-demo_df = pd.read_csv(demographics_filepath, index_col='id', sep=';')
+
+if add_demographics:
+    demo_df = pd.read_csv(demographics_filepath, index_col='id', sep=';')
 
 error_id={}
 
 trip_list = [f for f in os.listdir(choice_set_filepath) if os.path.isfile(os.path.join(choice_set_filepath, f))]
 
-debug = True
-late_start = False
+debug = False
+late_start = True
 start_id = 19270
 for choice_set_file in trip_list:
     try:
@@ -178,23 +183,26 @@ for choice_set_file in trip_list:
 
 
         #getting demographic values NOT USABLE UNTIL ID MATCHING METHOD IS RESOLVED
-        try:
-            gender = demo_df['gender'].iloc[int(idnum)]
-        except IndexError:
-            gender = 0
-        try:
-            age = demo_df['age'].iloc[int(idnum)]
-        except IndexError:
-            age = 0
-        try:
-            income = demo_df['income'].iloc[int(idnum)]
-        except IndexError:
-            income = 0
+        if add_demographics:
+            try:
+                gender = demo_df['gender'].iloc[int(idnum)]
+            except IndexError:
+                gender = 0
+            try:
+                age = demo_df['age'].iloc[int(idnum)]
+            except IndexError:
+                age = 0
+            try:
+                income = demo_df['income'].iloc[int(idnum)]
+            except IndexError:
+                income = 0
 
 
         # Add 'choice_id' as the first column
-        csv_columns = ['choice_id'] + sorted(all_columns)+['gender', 'age','income']
-
+        if add_demographics:
+            csv_columns = ['choice_id'] + sorted(all_columns)+['gender', 'age','income']
+        else:
+            csv_columns = ['choice_id'] + sorted(all_columns)
         # Open the CSV file for writing
         with open(output_filepath+'properties_'+str(idnum)+'.csv', 'w', newline='') as csvfile:
             # Create a CSV DictWriter object
@@ -206,7 +214,10 @@ for choice_set_file in trip_list:
             # Write each entry in path_dict as a row
             for key, value_dict in path_dict.items():
                 # Include the 'choice_id' in the row data
-                row = {'choice_id': key, 'gender': gender, 'age' : age, 'income' : income}
+                if add_demographics:
+                    row = {'choice_id': key, 'gender': gender, 'age' : age, 'income' : income}
+                else:
+                    row = {'choice_id': key}
                 row.update(value_dict)  # Add the rest of the columns from the value dict
 
                 # Write the row to the CSV
