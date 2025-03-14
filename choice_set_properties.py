@@ -26,6 +26,7 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
     adt_weight_list = []
     Q85_list = []
     Q85_weight_list = []
+    loe_index_list = []
     not_included_links = 0
     path_size = 0
     if ini_len!=0:
@@ -63,13 +64,14 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
             if adt !=-8888 and adt != -9999:
                 Q85_list.append(Q85)
                 Q85_weight_list.append(Q85*edge_length)
-                
+            if slope and edge_length:
+                loe_index_list.append(level_of_effort(slope, edge_length))
         else:
             lts = 0
 
             lts_list.append(lts)
             lts_weight_list.append(lts*edge_length)
-        
+
 
 
         if float(edge) in db_df['ID'].values:
@@ -81,7 +83,7 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
 
              , 'avg_lts_dist_w' : (sum(lts_weight_list)/max(len(lts_weight_list),1)), 'avg_ADT' : (sum(adt_list)/max(len(adt_list),1)),
              'avg_adt_dist_w' : (sum(adt_weight_list)/max(len(adt_weight_list),1)), 'avg_Q85' : (sum(Q85_list)/max(len(Q85_list),1)),
-             'avg_Q85_dist_w' : (sum(Q85_weight_list)/max(len(Q85_weight_list),1)), 'not_included_links' : not_included_links
+             'avg_Q85_dist_w' : (sum(Q85_weight_list)/max(len(Q85_weight_list),1)), 'not_included_links' : not_included_links, 'loe_index_sum':sum(loe_index_list), 'lts_sum':sum(lts_list)
             }
     
 
