@@ -12,9 +12,14 @@ model_name = 'while_loop_test'
 model = joblib.load(f"logit_models/multinomial_logit_{model_name}.pkl")
 
 final_df = pd.read_csv(f'logit_models/model data/training_data_{model_name}.csv')
-
+'''
 X = final_df[['avg_ADT','avg_Q85',
               'avg_lts','infra_ratio','length','max_loe','max_lts', 'path_size']] 
+'''
+X = final_df[['avg_ADT','avg_Q85','avg_loe', 'avg_Q85_dist_w','avg_adt_dist_w', 'avg_lts_dist_w', 'avg_slope', 'max_slope',
+              'avg_lts','length','max_loe','max_lts', 'path_size','infra_length','infra_ratio'
+              ]]  # Replace with your actual feature names
+        
 y = final_df['chosen']  # Target variable (which alternative was chosen)
 
 
