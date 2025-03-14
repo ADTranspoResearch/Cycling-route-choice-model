@@ -105,8 +105,8 @@ print(final_df.head())
 
 
 
-X = final_df[['avg_ADT','avg_Q85','avg_loe', 'avg_Q85_dist_w','avg_adt_dist_w',  'avg_slope', 'max_slope', #'avg_lts_dist_w',
-              'length','max_loe','max_lts', 'path_size','infra_length','infra_ratio'#,'avg_lts'
+X = final_df[['avg_ADT','avg_Q85','avg_loe', 'avg_Q85_dist_w','avg_adt_dist_w',  'avg_slope', 'max_slope', 'avg_lts_dist_w',
+              'length','max_loe','max_lts', 'path_size','infra_length','infra_ratio','avg_lts'
               ]]  # Replace with your actual feature names
 y = final_df['chosen']  # Target variable (which alternative was chosen)
 
@@ -114,7 +114,7 @@ y = final_df['chosen']  # Target variable (which alternative was chosen)
 #print(X['avg_lts_dist_w'].mean)
 
 standardize_columns(X, {'avg_ADT':'normal', 'avg_loe':'normal','avg_slope':'normal', 'infra_ratio':'pareto','length':'pareto','infra_length':'max-min','avg_Q85':'max-min'})
-#distribution_hist(X,'while_loop')
+distribution_hist(X,'while_loop')
 
 
 #todo: checkdir
