@@ -14,7 +14,7 @@ model_path = 'logit_models/'
 training_path = 'logit_models/model data/'
 check_dir(model_path)
 check_dir(training_path)
-model_name = 'while_loop_test'
+model_name = 'index_model'
 
 def distribution_hist(df, output_folder ):
     
@@ -93,32 +93,43 @@ for filename in os.listdir(directory_path):
 
 
 #checking infinity problem
-check_infinity(df_list)
-check_infinity(df_list)
 
+check_infinity(df_list)
 
 # Concatenate all DataFrames in the list into a single DataFrame
 final_df = pd.concat(df_list, ignore_index=True)
 
+final_df.dropna(inplace=True)
 # Display the first few rows of the final DataFrame
-print(final_df.head())
 
 
 
+'''
 X = final_df[['avg_ADT','avg_Q85','avg_loe', 'avg_Q85_dist_w','avg_adt_dist_w',  'avg_slope', 'max_slope', 'avg_lts_dist_w',
               'length','max_loe','max_lts', 'path_size','infra_length','infra_ratio','avg_lts'
               ]]  # Replace with your actual feature names
+standardize_columns(X, {'avg_ADT':'normal', 'avg_loe':'normal','avg_slope':'normal', 'infra_ratio':'pareto','length':'pareto','infra_length':'max-min','avg_Q85':'max-min'})
+'''
+
+#lts and LOE model
+X = final_df[['length','infra_ratio','infra_length','path_size','number_of_links','loe_index_sum','loe_dist_w_sum','loe_index_avg_dist_w','lts_sum','lts_dist_w_sum',
+              ]]  # Replace with your actual feature names
+
+standardize_columns(X, {'infra_ratio':'pareto','length':'pareto','infra_length':'max-min','number_of_links':'pareto'})
+
+X = X.dropna()
+
 y = final_df['chosen']  # Target variable (which alternative was chosen)
 
 
-#print(X['avg_lts_dist_w'].mean)
-
-standardize_columns(X, {'avg_ADT':'normal', 'avg_loe':'normal','avg_slope':'normal', 'infra_ratio':'pareto','length':'pareto','infra_length':'max-min','avg_Q85':'max-min'})
-distribution_hist(X,'while_loop')
 
 
-#todo: checkdir
-final_df.to_csv((training_path+f'training_data_{model_name}.csv'))
+
+#distribution_hist(X,'index_model')
+
+
+
+X.to_csv((training_path+f'training_data_{model_name}.csv'))
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
 
