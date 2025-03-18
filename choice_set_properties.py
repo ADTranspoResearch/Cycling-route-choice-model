@@ -45,12 +45,15 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
         if int(edge) in db_df['ID_TRC'].values and pd.Series(db_df['ID_TRC'].loc[int(edge)]).iloc[0] in lts_df.index:
             
             slope = pd.Series(lts_df['slope'].loc[db_df['ID_TRC'].loc[int(edge)]]).iloc[0]      
-            if slope != -8888 and slope !=-9999:
+            if  slope != -8888 and slope !=-9999:
                 slope_list.append(slope)
                 loe_list.append(slope*edge_length)
                 
             lts = pd.Series(lts_df['lts'].loc[db_df['ID_TRC'].loc[int(edge)]]).iloc[0] 
-            
+            if lts != -8825 and lts !=-9999 and lts !=-8440:
+                lts_list.append(lts)
+                lts_weight_list.append(lts*edge_length)
+
             adt = pd.Series(lts_df['ADT'].loc[db_df['ID_TRC'].loc[int(edge)]]).iloc[0] 
             if adt !=-8888 and adt != -9999:
                 adt_list.append(adt)
@@ -64,8 +67,8 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
         else:
             lts = 0
 
-        lts_list.append(lts)
-        lts_weight_list.append(lts*edge_length)
+            lts_list.append(lts)
+            lts_weight_list.append(lts*edge_length)
         
 
 
@@ -83,6 +86,9 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
     
 
 G = nx.read_graphml("road_network_2015_with_coords.graphml")
+add_demographics = False
+
+
 
 choice_set_filepath = 'choice_set/'
 database_filepath = 'shapefiles/2015_attempt/road_properties_2015.csv'
@@ -102,23 +108,39 @@ chosen_path_df = pd.read_csv(cyclist_trajectory_filepath, index_col= 'id_origine
 #chosen_path_df.index = chosen_path_df.index.astype(int)
 lts_df = pd.read_csv(lts_filepath, index_col = 'ID_TRC')
 
-demo_df = pd.read_csv(demographics_filepath, index_col='id', sep=';') #TODO:make demographics optional
+
+if add_demographics:
+    demo_df = pd.read_csv(demographics_filepath, index_col='id', sep=';')
 
 error_id={}
 
 trip_list = [f for f in os.listdir(choice_set_filepath) if os.path.isfile(os.path.join(choice_set_filepath, f))]
+trip_id_list = chosen_path_df.index.tolist() # in every loop check if the id is actually in the index, otherwise skip that trip
+
 
 debug = False
+debug_id = 52
 late_start = False
-start_id = 19270
+late_start_by_index = False #files are not sorted in numerical order, for example 3203 is index, 3080 but 52 is later, if using late start, 3203 will be done but not 52
+start_id = 28942
+start_index = 3080
+index_count = 0
 for choice_set_file in trip_list:
     try:
         idnum = int(choice_set_file.split("_")[0])
         if late_start:
             if idnum<start_id:
                 continue
+        if late_start_by_index:
+            if index_count<start_index:
+                index_count+=1
+                continue
+            
         if debug:
-            idnum =19270
+            idnum =debug_id
+        if idnum not in trip_id_list:
+            print(idnum,"not in trip list, skipping...")
+            continue
         choice_id=0
         path_dict = {}
         path_size_dict={}
@@ -163,6 +185,7 @@ for choice_set_file in trip_list:
                     link_len = (pd.Series(db_df['length'].loc[int(link)]).iloc[0]) #TODO: investigate why so many paths have unknown links, possibly use network to find replacement
                 except KeyError:
                     link_len = db_df['length'].mean() #if the length of the link is unknown, assign it the average link length
+
                 first_term = link_len/path_len
                 denomonator = 0
                 for alt_id, alt_path in path_size_dict.items():
@@ -178,23 +201,26 @@ for choice_set_file in trip_list:
 
 
         #getting demographic values NOT USABLE UNTIL ID MATCHING METHOD IS RESOLVED
-        try:
-            gender = demo_df['gender'].iloc[int(idnum)]
-        except IndexError:
-            gender = 0
-        try:
-            age = demo_df['age'].iloc[int(idnum)]
-        except IndexError:
-            age = 0
-        try:
-            income = demo_df['income'].iloc[int(idnum)]
-        except IndexError:
-            income = 0
+        if add_demographics:
+            try:
+                gender = demo_df['gender'].iloc[int(idnum)]
+            except IndexError:
+                gender = 0
+            try:
+                age = demo_df['age'].iloc[int(idnum)]
+            except IndexError:
+                age = 0
+            try:
+                income = demo_df['income'].iloc[int(idnum)]
+            except IndexError:
+                income = 0
 
 
         # Add 'choice_id' as the first column
-        csv_columns = ['choice_id'] + sorted(all_columns)+['gender', 'age','income']
-
+        if add_demographics:
+            csv_columns = ['choice_id'] + sorted(all_columns)+['gender', 'age','income']
+        else:
+            csv_columns = ['choice_id'] + sorted(all_columns)
         # Open the CSV file for writing
         with open(output_filepath+'properties_'+str(idnum)+'.csv', 'w', newline='') as csvfile:
             # Create a CSV DictWriter object
@@ -206,7 +232,10 @@ for choice_set_file in trip_list:
             # Write each entry in path_dict as a row
             for key, value_dict in path_dict.items():
                 # Include the 'choice_id' in the row data
-                row = {'choice_id': key, 'gender': gender, 'age' : age, 'income' : income}
+                if add_demographics:
+                    row = {'choice_id': key, 'gender': gender, 'age' : age, 'income' : income}
+                else:
+                    row = {'choice_id': key}
                 row.update(value_dict)  # Add the rest of the columns from the value dict
 
                 # Write the row to the CSV

@@ -6,6 +6,8 @@ import os
 import joblib
 import matplotlib.pyplot as plt
 from utils import *
+import numpy as np
+
 
 directory_path = 'choice_properties/'
 model_path = 'logit_models/'
@@ -23,7 +25,9 @@ def distribution_hist(df, output_folder ):
         plt.xlabel(col)
         plt.ylabel('Frequency')
         
-        file_name = f"visualization/{output_folder}/{col}_histogram.png"
+        filepath = f'visualization/{output_folder}/'
+        check_dir(filepath)
+        file_name = filepath+f"{col}_histogram.png"
         plt.savefig(file_name)
         plt.close() 
 
@@ -42,15 +46,31 @@ def standardize_columns(df, col_dict): # takes a dict of column names, where the
                 min_val =df_copy[col].min()
                 max_val =df_copy[col].max()
                 df_copy[col] =(df_copy[col]-min_val)/(max_val-min_val)
+            elif dist =='pareto':
+                df_copy[col] = np.log1p(df_copy[col]+0.0000001)
+                                
             else:
                 raise ValueError(f"Unknown distribution type: {dist}")
     
     return df_copy
 
+def check_infinity(list_df):
+    inf_df_indices = []
+    for i, df in enumerate(list_df):
+        # Convert all columns to numeric (to avoid type errors)
+        df_numeric = df.apply(pd.to_numeric, errors='coerce')
 
+        # Check if any infinity value exists
+        if np.isinf(df_numeric.to_numpy()).any():
+            inf_df_indices.append(index_dict[i])
+            del list_df[i]
+
+    # Output the indices
+    print("DataFrame indices containing infinity values:", inf_df_indices)
 
 df_list = []
-
+index_dict = {}
+i = 0
 # Loop through the files in the directory
 for filename in os.listdir(directory_path):
     if filename.endswith('.csv'):
@@ -66,9 +86,16 @@ for filename in os.listdir(directory_path):
         
         # Add a new column 'id' to the DataFrame
         df['user_id'] = id_number
-        
+        index_dict[i]=id_number
+        i+=1
         # Append the DataFrame to the list
         df_list.append(df)
+
+
+#checking infinity problem
+check_infinity(df_list)
+check_infinity(df_list)
+
 
 # Concatenate all DataFrames in the list into a single DataFrame
 final_df = pd.concat(df_list, ignore_index=True)
@@ -78,18 +105,22 @@ print(final_df.head())
 
 
 
-X = final_df[['avg_ADT','avg_Q85',#'avg_loe', 'avg_Q85_dist_w','avg_adt_dist_w', 'avg_lts_dist_w', 'avg_slope', 'max_slope',
-              'avg_lts','length','max_loe','max_lts', 'path_size','infra_length',#'infra_ratio'
+X = final_df[['avg_ADT','avg_Q85','avg_loe', 'avg_Q85_dist_w','avg_adt_dist_w',  'avg_slope', 'max_slope', 'avg_lts_dist_w',
+              'length','max_loe','max_lts', 'path_size','infra_length','infra_ratio','avg_lts'
               ]]  # Replace with your actual feature names
 y = final_df['chosen']  # Target variable (which alternative was chosen)
 
-standardize_columns(X, {'avg_ADT':'normal'})
+
+#print(X['avg_lts_dist_w'].mean)
+
+standardize_columns(X, {'avg_ADT':'normal', 'avg_loe':'normal','avg_slope':'normal', 'infra_ratio':'pareto','length':'pareto','infra_length':'max-min','avg_Q85':'max-min'})
 distribution_hist(X,'while_loop')
+
 
 #todo: checkdir
 final_df.to_csv((training_path+f'training_data_{model_name}.csv'))
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
 
 # Create the logistic regression model with multinomial option
 model = LogisticRegression(multi_class='multinomial', solver='lbfgs', max_iter=5000)

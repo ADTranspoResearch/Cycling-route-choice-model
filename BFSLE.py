@@ -13,7 +13,8 @@ error_id_path = 'choice_set/Past Error ID/'
 check_dir(output_path)
 check_dir(error_id_path)
 
-#TODO:add action to sp_edge_removed: look to improve function by containing more actions that are repeated
+#TODO: cyclists with less than 80 choice paths need to not save their sets to a file because it causes issues in model generation
+
 def sp_edge_removed(graph, edges_list: list[tuple], od_tup: tuple[str]): #this function will take a graph, a list of tups of nodes that define an edge, and an tup of OD IDs, it will remove the edge from the graph and output the shortest path between ODs on the new graph. it will also output the dictionary to be stored in the dictionary that contains all graphs and removed edges
 
 
@@ -136,6 +137,7 @@ for index, row in od_df.iterrows(): #iterate over every GPS trace and OD pair to
         print(f"warning: cyclist {row['cyclist_id']}'s choice set is only {len(sp_list)} long!")
         error_id[row['cyclist_id']] = f'choice set size, {len(sp_list)}'
         short_set_count+=1
+        continue
 
 
     choice_set_filename = f"{row['cyclist_id']}_choice_set.json"
