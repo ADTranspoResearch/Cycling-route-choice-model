@@ -95,7 +95,8 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
     
     #dictionary for any attributes about the vehicle volume or usage on links
     trf_dict = {'avg_ADT' : (sum(adt_list)/max(len(adt_list),1)), 'avg_adt_dist_w' : (sum(adt_weight_list)/max(len(adt_weight_list),1)), 
-                'avg_Q85' : (sum(Q85_list)/max(len(Q85_list),1)), 'avg_Q85_dist_w' : (sum(Q85_weight_list)/max(len(Q85_weight_list),1)) }
+                'avg_Q85' : (sum(Q85_list)/max(len(Q85_list),1)), 'avg_Q85_dist_w' : (sum(Q85_weight_list)/max(len(Q85_weight_list),1)), 
+                'ADT_sum':sum(adt_list)}
     prop_dict = lts_dict | att_dict | loe_dict | trf_dict
 
     return prop_dict
