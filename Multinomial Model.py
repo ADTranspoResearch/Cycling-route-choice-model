@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, f1_score
 import os
 import joblib
 import matplotlib.pyplot as plt
@@ -47,7 +47,7 @@ def standardize_columns(df, col_dict): # takes a dict of column names, where the
                 max_val =df_copy[col].max()
                 df_copy[col] =(df_copy[col]-min_val)/(max_val-min_val)
             elif dist =='pareto':
-                df_copy[col] = np.log1p(df_copy[col]+0.0000001)
+                df_copy[col] = np.log1p(df_copy[col])
                                 
             else:
                 raise ValueError(f"Unknown distribution type: {dist}")
@@ -102,22 +102,18 @@ final_df = pd.concat(df_list, ignore_index=True)
 final_df.dropna(inplace=True)
 # Display the first few rows of the final DataFrame
 
+X = create_training_df(final_df,model_name)
 
 
-'''
-X = final_df[['avg_ADT','avg_Q85','avg_loe', 'avg_Q85_dist_w','avg_adt_dist_w',  'avg_slope', 'max_slope', 'avg_lts_dist_w',
-              'length','max_loe','max_lts', 'path_size','infra_length','infra_ratio','avg_lts'
-              ]]  # Replace with your actual feature names
-standardize_columns(X, {'avg_ADT':'normal', 'avg_loe':'normal','avg_slope':'normal', 'infra_ratio':'pareto','length':'pareto','infra_length':'max-min','avg_Q85':'max-min'})
-'''
 
-#lts and LOE model
-X = final_df[['length','infra_ratio','infra_length','path_size','number_of_links','loe_index_sum','loe_dist_w_sum','loe_index_avg_dist_w','lts_sum','lts_dist_w_sum',
-              ]]  # Replace with your actual feature names
+##lts and LOE model
+#X = final_df[['length','infra_ratio','infra_length','path_size','number_of_links','loe_index_sum','loe_dist_w_sum','loe_index_avg_dist_w','lts_sum','lts_dist_w_sum',
+#              ]]  # Replace with your actual feature names
 
-standardize_columns(X, {'infra_ratio':'pareto','length':'pareto','infra_length':'max-min','number_of_links':'pareto'})
+standard_dict = create_standardizing_dict(X)
+standardize_columns(X, standard_dict)
 
-X = X.dropna()
+
 
 y = final_df['chosen']  # Target variable (which alternative was chosen)
 
@@ -128,28 +124,36 @@ y = final_df['chosen']  # Target variable (which alternative was chosen)
 #distribution_hist(X,'index_model')
 
 
+#starting work on running multiple models and comparing outputs
+training_dict = {model_name:X}
+model_score_dict = {}
 
-X.to_csv((training_path+f'training_data_{model_name}.csv'))
+for name, Xdata in training_dict.items():
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
+    Xdata.to_csv((training_path+f'training_data_{name}.csv'))
 
-# Create the logistic regression model with multinomial option
-model = LogisticRegression(multi_class='multinomial', solver='lbfgs', max_iter=5000)
+    X_train, X_test, y_train, y_test = train_test_split(Xdata, y, test_size=0.1, random_state=42)
 
-# Fit the model on the training data
-model.fit(X_train, y_train)
+    # Create the logistic regression model with multinomial option
+    model = LogisticRegression(multi_class='multinomial', solver='lbfgs', max_iter=5000)
 
-# Make predictions on the test set
-y_pred = model.predict(X_test)
+    # Fit the model on the training data
+    model.fit(X_train, y_train)
 
-# Optionally, get the predicted probabilities for each class
-y_prob = model.predict_proba(X_test)
+    # Make predictions on the test set
+    y_pred = model.predict(X_test)
 
-# Print classification report
-print(classification_report(y_test, y_pred))
+    # Optionally, get the predicted probabilities for each class
+    y_prob = model.predict_proba(X_test)
 
-# Print confusion matrix
-print("Confusion Matrix:")
-print(confusion_matrix(y_test, y_pred))
+    # Print classification report
+    print(classification_report(y_test, y_pred))
 
-joblib.dump(model,model_path+f"multinomial_logit_{model_name}.pkl")
+    # Print confusion matrix
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
+
+    model_score_dict[name] = classification_report(y_test, y_pred, output_dict=True)
+
+    joblib.dump(model,model_path+f"multinomial_logit_{model_name}.pkl")
+print(model_score_dict)
