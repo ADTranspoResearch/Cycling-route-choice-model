@@ -4,4 +4,5 @@ choice_properties/
 *.graphml
 
 visualization/
-logit_models/
+logit_models/*
+!logit_models/*.csv
