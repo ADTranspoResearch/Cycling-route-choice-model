@@ -26,6 +26,8 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
     adt_weight_list = []
     Q85_list = []
     Q85_weight_list = []
+    loe_index_list = []
+    loe_index_w_list = []
     not_included_links = 0
     path_size = 0
     if ini_len!=0:
@@ -63,26 +65,41 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
             if adt !=-8888 and adt != -9999:
                 Q85_list.append(Q85)
                 Q85_weight_list.append(Q85*edge_length)
-                
+            if slope and edge_length:
+                loe_index = level_of_effort(slope, edge_length)
+                loe_index_list.append(loe_index)
+                loe_index_w_list.append(loe_index*edge_length)
         else:
             lts = 0
 
             lts_list.append(lts)
             lts_weight_list.append(lts*edge_length)
-        
+
 
 
         if float(edge) in db_df['ID'].values:
             cycl_length += pd.Series(db_df['length'].loc[int(edge)]).iloc[0] 
         
+#breaking up the dictionary into multiple dicts to make it more readable
+    #dictionary for anything related to LTS
+    lts_dict = {'avg_lts':(sum(lts_list)/max(len(lts_list),1)), 'max_lts' : max(lts_list, default=0), 'avg_lts_dist_w' : (sum(lts_weight_list)/max(len(lts_weight_list),1)),
+                'lts_sum':sum(lts_list), 'lts_dist_w_sum':sum(lts_weight_list)}
+    #dictionary for any raw road attributes
+    att_dict = {'length':path_length,'number_of_links' : path_size, 'infra_length' : cycl_length, 'infra_ratio' : min((cycl_length/max(path_length,1)),1), 
+                'chosen':chosen_state,'not_included_links' : not_included_links}
+    
+    #dictionary for any attributes related to slope or level of effort
+    loe_dict = {'avg_slope':(sum(slope_list)/max(len(slope_list),1)), 'max_slope' : max(slope_list, default=0), 'avg_loe':(sum(loe_list)/max(len(loe_list),1)),
+             'max_loe' : max(loe_list, default=0), 'loe_index_sum':sum(loe_index_list),'loe_dist_w_sum':sum(loe_index_w_list), 
+             'loe_index_avg_dist_w':sum(loe_index_w_list)/max(len(loe_index_w_list),1)}
+    
+    #dictionary for any attributes about the vehicle volume or usage on links
+    trf_dict = {'avg_ADT' : (sum(adt_list)/max(len(adt_list),1)), 'avg_adt_dist_w' : (sum(adt_weight_list)/max(len(adt_weight_list),1)), 
+                'avg_Q85' : (sum(Q85_list)/max(len(Q85_list),1)), 'avg_Q85_dist_w' : (sum(Q85_weight_list)/max(len(Q85_weight_list),1)), 
+                'ADT_sum':sum(adt_list)}
+    prop_dict = lts_dict | att_dict | loe_dict | trf_dict
 
-    return {'length':path_length,'number of links' : path_size, 'infra_length' : cycl_length, 'infra_ratio' : min((cycl_length/max(path_length,1)),1), 'chosen':chosen_state,'avg_slope':(sum(slope_list)/max(len(slope_list),1)), 'max_slope' : max(slope_list, default=0), 'avg_loe':(sum(loe_list)/max(len(loe_list),1)),
-             'max_loe' : max(loe_list, default=0), 'avg_lts':(sum(lts_list)/max(len(lts_list),1)), 'max_lts' : max(lts_list, default=0)
-
-             , 'avg_lts_dist_w' : (sum(lts_weight_list)/max(len(lts_weight_list),1)), 'avg_ADT' : (sum(adt_list)/max(len(adt_list),1)),
-             'avg_adt_dist_w' : (sum(adt_weight_list)/max(len(adt_weight_list),1)), 'avg_Q85' : (sum(Q85_list)/max(len(Q85_list),1)),
-             'avg_Q85_dist_w' : (sum(Q85_weight_list)/max(len(Q85_weight_list),1)), 'not_included_links' : not_included_links
-            }
+    return prop_dict
     
 
 G = nx.read_graphml("road_network_2015_with_coords.graphml")
