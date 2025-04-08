@@ -6,3 +6,4 @@ choice_properties/
 visualization/
 logit_models/*
 !logit_models/*.csv
+figures/
