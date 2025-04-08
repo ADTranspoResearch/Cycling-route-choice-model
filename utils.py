@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-
+import numpy as np
 def check_dir(path):
     # Check if the directory exists
     if not os.path.exists(path):
