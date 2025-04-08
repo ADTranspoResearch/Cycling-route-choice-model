@@ -59,7 +59,8 @@ def create_training_df(df, name):
     except IndexError:
         print(f'{name} not in model_variables list!')
         raise
-    
+    add_list = ['user_id','route_id']
+    var_list.extend(add_list)
     X = df[var_list]
     return X
 
@@ -74,3 +75,51 @@ def create_standardizing_dict(X, override=[]):
     dist_dict = dict(zip(dist_df[0],dist_df[1]))
     dist_dict = {key: value for key, value in dist_dict.items() if ((key in var_list) and (key not in override))}
     return dist_dict
+
+def check_infinity(list_df): #used by concat_training_data
+    inf_df_indices = []
+    for i, df in enumerate(list_df):
+        # Convert all columns to numeric (to avoid type errors)
+        df_numeric = df.apply(pd.to_numeric, errors='coerce')
+
+        # Check if any infinity value exists
+        if np.isinf(df_numeric.to_numpy()).any():
+            inf_df_indices.append(index_dict[i])
+            del list_df[i]
+
+    # Output the indices
+    print("DataFrame indices containing infinity values:", inf_df_indices)
+
+
+def concat_training_data(directory_path='choice_properties/',output_path='logit_models/model_data/'): #takes the filepath where the individual choice set properties csv files are and creates a single df of all cyclists, will return the df to be used but will also save it as a csv so this can only be called once when the choice set properties are changed, and the csv can be read after instead
+    df_list = []
+    index_dict = {}
+    i = 0
+    # Loop through the files in the directory
+    for filename in os.listdir(directory_path):
+        if filename.endswith('.csv'):
+            # Construct the full path to the file
+            file_path = os.path.join(directory_path, filename)
+            
+            # Read the CSV file into a DataFrame
+            df = pd.read_csv(file_path)
+            
+            # Extract the ID from the filename (remove the .csv extension)
+            # Assuming the filename is structured like 'data_1.csv', we take '1' as the ID
+            id_number = filename.split('.')[0].split('_')[-1]  # Change this based on your filename pattern
+            
+            # Add a new column 'id' to the DataFrame
+            df['user_id'] = id_number
+            index_dict[i]=id_number
+            df['route_id']=df.index
+            i+=1
+            # Append the DataFrame to the list
+            df_list.append(df)
+       
+    check_infinity(df_list)
+    # Concatenate all DataFrames in the list into a single DataFrame
+    final_df = pd.concat(df_list, ignore_index=True)
+
+    final_df.dropna(inplace=True)
+    final_df.to_csv(output_path+'raw_training_data.csv')
+    return final_df

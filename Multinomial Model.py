@@ -11,7 +11,7 @@ import numpy as np
 
 directory_path = 'choice_properties/'
 model_path = 'logit_models/'
-training_path = 'logit_models/model data/'
+training_path = 'logit_models/model_data/'
 check_dir(model_path)
 check_dir(training_path)
 model_name = 'index_model'
@@ -54,53 +54,7 @@ def standardize_columns(df, col_dict): # takes a dict of column names, where the
     
     return df_copy
 
-def check_infinity(list_df):
-    inf_df_indices = []
-    for i, df in enumerate(list_df):
-        # Convert all columns to numeric (to avoid type errors)
-        df_numeric = df.apply(pd.to_numeric, errors='coerce')
-
-        # Check if any infinity value exists
-        if np.isinf(df_numeric.to_numpy()).any():
-            inf_df_indices.append(index_dict[i])
-            del list_df[i]
-
-    # Output the indices
-    print("DataFrame indices containing infinity values:", inf_df_indices)
-
-df_list = []
-index_dict = {}
-i = 0
-# Loop through the files in the directory
-for filename in os.listdir(directory_path):
-    if filename.endswith('.csv'):
-        # Construct the full path to the file
-        file_path = os.path.join(directory_path, filename)
-        
-        # Read the CSV file into a DataFrame
-        df = pd.read_csv(file_path)
-        
-        # Extract the ID from the filename (remove the .csv extension)
-        # Assuming the filename is structured like 'data_1.csv', we take '1' as the ID
-        id_number = filename.split('.')[0].split('_')[-1]  # Change this based on your filename pattern
-        
-        # Add a new column 'id' to the DataFrame
-        df['user_id'] = id_number
-        index_dict[i]=id_number
-        i+=1
-        # Append the DataFrame to the list
-        df_list.append(df)
-
-
-#checking infinity problem
-
-check_infinity(df_list)
-
-# Concatenate all DataFrames in the list into a single DataFrame
-final_df = pd.concat(df_list, ignore_index=True)
-
-final_df.dropna(inplace=True)
-# Display the first few rows of the final DataFrame
+final_df = concat_training_data()
 
 X = create_training_df(final_df,model_name)
 
@@ -128,11 +82,17 @@ y = final_df['chosen']  # Target variable (which alternative was chosen)
 training_dict = {model_name:X}
 model_score_dict = {}
 
+one_model = False
+test_name = 'base_model'
 for name, Xdata in training_dict.items():
+    if one_model:
+        if name != test_name:
+            continue
+    training_data = Xdata.copy()
+    training_data['chosen']=y
+    training_data.to_csv((training_path+f'training_data_{name}.csv'))
 
-    Xdata.to_csv((training_path+f'training_data_{name}.csv'))
-
-    X_train, X_test, y_train, y_test = train_test_split(Xdata, y, test_size=0.1, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(Xdata, y, test_size=0.2, random_state=42)
 
     # Create the logistic regression model with multinomial option
     model = LogisticRegression(multi_class='multinomial', solver='lbfgs', max_iter=5000)
@@ -156,4 +116,6 @@ for name, Xdata in training_dict.items():
     model_score_dict[name] = classification_report(y_test, y_pred, output_dict=True)
 
     joblib.dump(model,model_path+f"multinomial_logit_{model_name}.pkl")
+    if one_model:
+        break
 print(model_score_dict)
