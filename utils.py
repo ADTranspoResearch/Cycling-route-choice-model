@@ -76,7 +76,7 @@ def create_standardizing_dict(X, override=[]):
     dist_dict = {key: value for key, value in dist_dict.items() if ((key in var_list) and (key not in override))}
     return dist_dict
 
-def check_infinity(list_df): #used by concat_training_data
+def check_infinity(list_df, index_dict): #used by concat_training_data
     inf_df_indices = []
     for i, df in enumerate(list_df):
         # Convert all columns to numeric (to avoid type errors)
@@ -116,7 +116,7 @@ def concat_training_data(directory_path='choice_properties/',output_path='logit_
             # Append the DataFrame to the list
             df_list.append(df)
        
-    check_infinity(df_list)
+    check_infinity(df_list, index_dict)
     # Concatenate all DataFrames in the list into a single DataFrame
     final_df = pd.concat(df_list, ignore_index=True)
 
