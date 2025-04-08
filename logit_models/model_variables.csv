@@ -1,4 +1,5 @@
-model_name,
+model_name,,,,,,,,,,,,,,,
 first_model,avg_ADT,avg_Q85,avg_loe, avg_Q85_dist_w,avg_adt_dist_w,  avg_slope, max_slope, avg_lts_dist_w,length,max_loe,max_lts, path_size,infra_length,infra_ratio,avg_lts
-test_model,avg_Q85,
-index_model,length,infra_ratio,infra_length,path_size,number_of_links,loe_index_sum,loe_dist_w_sum,loe_index_avg_dist_w,lts_sum,lts_dist_w_sum
+test_model,avg_Q85,,,,,,,,,,,,,,
+index_model,infra_ratio,lts_sum,length,path_size,,,,,,,,,,,
+base_model,length,number_of_links,infra_length,path_size,ADT_dist_sum,infra_ratio,Q85_dist_sum,,,,,,,,
