@@ -1,0 +1,11 @@
+infra_ratio,pareto
+length,pareto
+infra_length,max-min
+number_of_links,pareto
+avg_ADT,normal
+avg_loe,normal
+avg_slope,normal
+infra_ratio,pareto
+length,pareto
+infra_length,max-min
+avg_Q85,max-min

@@ -31,7 +31,7 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
     not_included_links = 0
     path_size = 0
     if ini_len!=0:
-        path_length= ini_len
+        path_length= int(ini_len)
     for edge in edge_path_list:
         path_size+=1
         if int(edge) == 1607918:
@@ -42,7 +42,7 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
         
         edge_length = pd.Series(db_df['length'].loc[int(edge)]).iloc[0]
         if ini_len==0:
-            path_length += edge_length
+            path_length += int(edge_length)
             
         if int(edge) in db_df['ID_TRC'].values and pd.Series(db_df['ID_TRC'].loc[int(edge)]).iloc[0] in lts_df.index:
             
@@ -89,14 +89,15 @@ def get_path_properties(edge_path_list, chosen_state=0, ini_len=0):
                 'chosen':chosen_state,'not_included_links' : not_included_links}
     
     #dictionary for any attributes related to slope or level of effort
-    loe_dict = {'avg_slope':(sum(slope_list)/max(len(slope_list),1)), 'max_slope' : max(slope_list, default=0), 'avg_loe':(sum(loe_list)/max(len(loe_list),1)),
+    loe_dict = {'avg_slope':(sum(slope_list)/max(len(slope_list),1)), 'slope_sum':sum(slope_list), 'max_slope' : max(slope_list, default=0), 'avg_loe':(sum(loe_list)/max(len(loe_list),1)),
              'max_loe' : max(loe_list, default=0), 'loe_index_sum':sum(loe_index_list),'loe_dist_w_sum':sum(loe_index_w_list), 
              'loe_index_avg_dist_w':sum(loe_index_w_list)/max(len(loe_index_w_list),1)}
     
     #dictionary for any attributes about the vehicle volume or usage on links
-    trf_dict = {'avg_ADT' : (sum(adt_list)/max(len(adt_list),1)), 'avg_adt_dist_w' : (sum(adt_weight_list)/max(len(adt_weight_list),1)), 
+    trf_dict = {'avg_ADT' : (sum(adt_list)/max(len(adt_list),1)), 'ADT_sum': sum(adt_list), 'ADT_dist_sum': sum(adt_weight_list), 
+                'avg_adt_dist_w' : (sum(adt_weight_list)/max(len(adt_weight_list),1)), 'Q85_sum' : sum(Q85_list), 'Q85_dist_sum': sum(Q85_weight_list),
                 'avg_Q85' : (sum(Q85_list)/max(len(Q85_list),1)), 'avg_Q85_dist_w' : (sum(Q85_weight_list)/max(len(Q85_weight_list),1)), 
-                'ADT_sum':sum(adt_list)}
+                }
     prop_dict = lts_dict | att_dict | loe_dict | trf_dict
 
     return prop_dict
@@ -120,6 +121,7 @@ check_dir(error_filepath)
 
 
 chosen_path_df = pd.read_csv(cyclist_trajectory_filepath, index_col= 'id_origine')
+chosen_path_df.dropna(subset=['trip_segment','id'], inplace=True) #drops any rows with missing trip segments or id numbers which usually correspond to blank rows
 #chosen_path_df = chosen_path_df.dropna(axis=0, how='any')
 
 #chosen_path_df.index = chosen_path_df.index.astype(int)
@@ -138,9 +140,9 @@ trip_id_list = chosen_path_df.index.tolist() # in every loop check if the id is 
 debug = False
 debug_id = 52
 late_start = False
-late_start_by_index = False #files are not sorted in numerical order, for example 3203 is index, 3080 but 52 is later, if using late start, 3203 will be done but not 52
+late_start_by_index = True #files are not sorted in numerical order, for example 3203 is index, 3080 but 52 is later, if using late start, 3203 will be done but not 52
 start_id = 28942
-start_index = 3080
+start_index = 3175
 index_count = 0
 for choice_set_file in trip_list:
     try:
