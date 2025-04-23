@@ -51,7 +51,7 @@ Takes the df with all the columns output by choice_set_properties, and the name 
 the name of the model corresponds to the models in the file "logit_models/model_variabes.csv" which dictates what variables to include based on model name
 
 """""
-def create_training_df(df, name):
+def create_training_df(df, name, chosen=False):
 
     model_list_df = pd.read_csv('logit_models/model_variables.csv',skiprows=1, header=None, index_col=0, engine='python')
     try:
@@ -60,6 +60,8 @@ def create_training_df(df, name):
         print(f'{name} not in model_variables list!')
         raise
     add_list = ['user_id','route_id']
+    if chosen:
+        add_list.append('chosen')
     var_list.extend(add_list)
     X = df[var_list]
     return X
@@ -123,3 +125,31 @@ def concat_training_data(directory_path='choice_properties/',output_path='logit_
     final_df.dropna(inplace=True)
     final_df.to_csv(output_path+'raw_training_data.csv')
     return final_df
+
+
+def idca_to_idco(df): #todo: make this function take arguments that set the user_id col name and route id col name along with certain options such as randomizing 
+    df_copy = df.copy()
+    df_copy['route_id'] = df_copy.groupby('user_id')['route_id'].transform(lambda x: np.random.permutation(x))
+    user_col = [col for col in df_copy.columns if 'user' in col.lower()][0]  # Assuming user_id column name contains 'user'
+    route_col = [col for col in df_copy.columns if 'route' in col.lower()][0]  # Assuming route_id column name contains 'route'
+
+    df_pivot = df_copy.set_index([user_col, route_col]).unstack(route_col)
+
+    # Flatten the columns to create new column names
+    df_pivot.columns = [f'{col[0]}_{col[1]}' for col in df_pivot.columns]
+
+    # Step 3: Get the chosen route_id for each user_id
+    df_chosen_route = df_copy[df_copy['chosen'] == 1].groupby(user_col)[route_col].first()
+
+
+    # Step 4: Drop all columns that start with 'chosen_' except 'chosen_route_id'
+    chosen_columns = [col for col in df_pivot.columns if col.startswith('chosen_')]
+    df_pivot = df_pivot.drop(columns=chosen_columns)
+
+
+    # Merge the chosen_route with the pivoted DataFrame
+    df_pivot = df_pivot.reset_index()
+    df_pivot['chosen_route_id'] = df_pivot[user_col].map(df_chosen_route)
+
+    # Show the resulting DataFrame
+    return(df_pivot)
