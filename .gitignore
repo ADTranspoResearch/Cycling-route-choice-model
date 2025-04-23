@@ -8,3 +8,6 @@ visualization/
 #!logit_models/*.csv
 figures/
 demographics/
+biogeme_model/
+__biogeme_model/
+notebooks/
