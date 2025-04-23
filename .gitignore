@@ -4,8 +4,8 @@ choice_properties/
 *.graphml
 
 visualization/
-#logit_models/*
-#!logit_models/*.csv
+logit_models/*
+!logit_models/*.csv
 figures/
 demographics/
 biogeme_model/
