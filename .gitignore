@@ -11,3 +11,5 @@ demographics/
 biogeme_model/
 __biogeme_model/
 notebooks/
+.ipynb_checkpoints
+__pycache__
