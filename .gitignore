@@ -8,3 +8,4 @@ logit_models/*
 !logit_models/*.csv
 figures/
 demographics/
+__pycache__
