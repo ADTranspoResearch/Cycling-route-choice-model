@@ -1,16 +1,19 @@
+"""estimates a biogeme model for a given dataset specified in code"""
 import biogeme.biogeme as bio
-from biogeme.expressions import Beta, log, PanelLikelihoodTrajectory, Variable
+from biogeme.expressions import Beta, Variable
 from biogeme import models
-from biogeme.models import loglogit, logit
 import biogeme.database as db
 import pandas as pd
-from utils import *
-import numpy as np
-model_name = 'index_model'
-choice_set_size = 81 #this cannot be changed yet, must add a line that drops columns above this value
+
+from utils import create_training_df, idca_to_idco
+
+MODEL_NAME = 'index_model'
+# this cannot be changed yet, 
+# TODO: must add a line that drops columns above this value
+CHOICE_SET_SIZE = 81
 
 full_df = pd.read_csv('logit_models/model_data/raw_training_data.csv')
-final_df = create_training_df(full_df,model_name,chosen=True)
+final_df = create_training_df(full_df,MODEL_NAME,chosen=True)
 
 #normalizing values
 final_df['lts_sum']=final_df['lts_sum']/100
@@ -28,23 +31,22 @@ lts_sum = {}
 path_size = {}
 loe_index_sum = {}
 length = {}
-for i in range(0, choice_set_size):
+for i in range(0, CHOICE_SET_SIZE):
     infra_ratio[i] = Variable(f'infra_ratio_{i}')
     lts_sum[i] = Variable(f'lts_sum_{i}')
     path_size[i] = Variable(f'path_size_{i}')
     loe_index_sum[i] = Variable(f'loe_index_sum_{i}')
     length[i] = Variable(f'length_{i}')
-    
-chosen = Variable('chosen_route_id')
 
+chosen = Variable('chosen_route_id')
 #number_of_links = Variables('number_of_links']
 #infra_length = Variable('infra_length')
 
 
 # Define Parameters (Generic because route_id has no fixed meaning)
-B_infra_ratio = Beta('B_infra_ratio', 0, None, None, 0)  
-B_lts_sum = Beta('B_lts_sum', 0, None, None, 0)  
-B_path_size = Beta('B_path_size', -1.5, None, None, 1)  
+B_infra_ratio = Beta('B_infra_ratio', 0, None, None, 0)
+B_lts_sum = Beta('B_lts_sum', 0, None, None, 0)
+B_path_size = Beta('B_path_size', -1.5, None, None, 1)
 B_length = Beta('B_length', 0, None, None, 0)
 B_loe_index_sum = Beta('B_loe_index_sum', 0, None, None, 0)
 
@@ -52,8 +54,13 @@ B_loe_index_sum = Beta('B_loe_index_sum', 0, None, None, 0)
 V = {}
 av = {}
 
-for i in range(0, choice_set_size):  # 0 to 81
-    V[i] =  B_lts_sum * lts_sum[i] +B_length*length[i] + B_loe_index_sum*loe_index_sum[i]+ B_path_size*bio.log(path_size[i]) #  + B_infra_ratio * infra_ratio[i]  
+for i in range(0, CHOICE_SET_SIZE):  # 0 to 81
+    V[i] = (B_lts_sum*lts_sum[i]
+            + B_length*length[i]
+            + B_loe_index_sum*loe_index_sum[i]
+            + B_path_size*bio.log(path_size[i])
+            #+ B_infra_ratio * infra_ratio[i]  
+    )
     av[i] = 1  # All alternatives are always available
 
 # Define the logit model
