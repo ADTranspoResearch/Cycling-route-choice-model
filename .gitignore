@@ -13,3 +13,4 @@ __biogeme_model/
 notebooks/
 .ipynb_checkpoints
 __pycache__
+test/
