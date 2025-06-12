@@ -23,13 +23,13 @@ def link_bearing(line: LineString):
     end = line.coords[-1]
     return calculate_bearing(Point(end), Point(start))
 
-def normal_dist_prob(X, mean=0, var=10):
+def normal_dist_prob(X, mean=0, var=20):
     """calculates the probability of a normal distribution"""
     prob = (1 / (sqrt(2 * pi) * var)) * exp(-((X - mean) ** 2 / (2 * var**2)))
     return prob
 
 
-def gaussian_distance(point, candidate_geo, var=5):
+def gaussian_distance(point, candidate_geo, var=20):
     """
     Calculates the probability of a point belonging to segemnt
     takes in a point and list of candidates, optional variance parameter

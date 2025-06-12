@@ -235,7 +235,8 @@ def run_viterbi(point_data, graph):
     initialize_edge_lookup(graph)
     path = viterbi(point_data)
     path = remove_duplicates(path)
-    path, node_path = prune_disconnected_links(path)
-    node_path = add_missing_nodes(node_path, graph)
-    path = node_to_edge_list(node_path)
+    node_path = path
+    #path, node_path = prune_disconnected_links(path)
+    #node_path = add_missing_nodes(node_path, graph)
+    #path = node_to_edge_list(node_path)
     return path, node_path

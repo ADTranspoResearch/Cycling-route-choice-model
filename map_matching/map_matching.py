@@ -1,6 +1,5 @@
 """Map-matching module that matches trajectory points to a road network"""
 
-import os
 from time import time
 import pandas as pd
 import geopandas as gpd
@@ -23,16 +22,11 @@ from displaymap import display_path
 # Road network NetworkX graph.
 
 # Get filepaths of the necessary files
-script_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(script_dir)
-os.chdir(parent_dir)
-print(f"Changed working directory to: {os.getcwd()}")
-shapefile_path_network = os.path.join(
-    "shapefiles", "map_matching", "2015merged_network_file.shp"
-)
-shapefile_path_trips = os.path.join(
-    "shapefiles", "map_matching", "island_cyclist_trips.shp"
-)
+
+shapefile_path_network = "shapefiles/map_matching/2015merged_network_file.shp"
+
+shapefile_path_trips = "shapefiles/map_matching/island_cyclist_trips.shp"
+
 shp_network_full = gpd.read_file(shapefile_path_network)
 shp_trip = gpd.read_file(shapefile_path_trips)
 shp_network_full = shp_network_full.to_crs("EPSG:32188")
