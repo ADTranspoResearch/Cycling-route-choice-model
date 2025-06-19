@@ -42,9 +42,11 @@ for id_trc in road_id_list:
 
         last_node = df.loc[(df['ID_TRC'] == id_trc) & (df['vertex_pos'] == 0), 'node_id'].iloc[0]
         last_x_corr, last_y_corr = get_node_coords(id_trc, 0)
-    
+    else:
+        continue
     length = df.loc[(df['ID_TRC'] == id_trc) & (df['vertex_pos'] == 0), 'Length'].iloc[0]
-    
+
+
     G.add_edge(first_node, last_node, ID_RD=id_trc, length=length)
     if two_way:
         G.add_edge(last_node, first_node, ID_RD=id_trc, length=length)
@@ -77,9 +79,16 @@ for id_bk in bike_id_list:
             last_x_corr, last_y_corr = get_node_coords(id_bk, -1, id_name='ID')
 
         elif type2 == 33: #todo contraflow off road
-            continue
-        elif type2 == 31:#todo contraflow off road2
-            continue
+            first_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == -1), 'node_id'].iloc[0]
+            first_x_corr, first_y_corr = get_node_coords(id_bk, -1, id_name='ID')
+            last_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == 0), 'node_id'].iloc[0]
+            last_x_corr, last_y_corr = get_node_coords(id_bk, 0, id_name='ID')
+        elif type2 == 31:#todo contraflow off road and bike lane in traffic direction
+            first_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == 0), 'node_id'].iloc[0]
+            first_x_corr, first_y_corr = get_node_coords(id_bk, 0, id_name='ID')
+            last_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == -1), 'node_id'].iloc[0]
+            last_x_corr, last_y_corr = get_node_coords(id_bk, -1, id_name='ID')
+            two_way = True
         else:
             continue
     else:
@@ -114,12 +123,22 @@ for id_bk in bike_id_list:
             last_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == 0), 'node_id'].iloc[0]
             last_x_corr, last_y_corr = get_node_coords(id_bk, 0, id_name='ID')
 
-        elif type2 == 31: #TODO sharrow and contraflow
-            continue
         elif type2 == 33: #TODO lane and contraflow
-            continue
+            first_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == 0), 'node_id'].iloc[0]
+            first_x_corr, first_y_corr = get_node_coords(id_bk, 0, id_name='ID')
+            last_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == -1), 'node_id'].iloc[0]
+            last_x_corr, last_y_corr = get_node_coords(id_bk, -1, id_name='ID')
+            two_way = True
+        elif type2 == 33: #TODO sharrow and contraflow
+            first_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == -1), 'node_id'].iloc[0]
+            first_x_corr, first_y_corr = get_node_coords(id_bk, -1, id_name='ID')
+            last_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == 0), 'node_id'].iloc[0]
+            last_x_corr, last_y_corr = get_node_coords(id_bk, 0, id_name='ID')
         elif type2 == 34: #rush hour lane NEGLECTING?
-            continue
+            first_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == 0), 'node_id'].iloc[0]
+            first_x_corr, first_y_corr = get_node_coords(id_bk, 0, id_name='ID')
+            last_node = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == -1), 'node_id'].iloc[0]
+            last_x_corr, last_y_corr = get_node_coords(id_bk, -1, id_name='ID')
     length = df.loc[(df['ID'] == id_bk) & (df['vertex_pos'] == 0), 'LONGUEUR'].iloc[0]    
     G.add_edge(first_node, last_node, ID_RD=id_bk, length=length)
     bike_count+=1
