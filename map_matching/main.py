@@ -119,6 +119,7 @@ with col3:
         st.rerun()
 with col4:
     if st.button("🛑 Exit and save changes"):
+        status_placeholder.write(f"Last trip reviewed: #{row_index}...")
         st.success("Saving changes to correction file")
         st.session_state.output_df.to_csv(st.session_state.output_path)
         st.stop()
