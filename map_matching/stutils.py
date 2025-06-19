@@ -5,13 +5,14 @@ import geopandas as gpd
 
 from candidatesearch import create_network_rtree
 
+
 def initialize():
     """
     Initializes data heavy variables that do not need to be run
     each iteration.
     """
-    
-    print('running init')
+
+    print("running init")
     shapefile_path_network = "shapefiles/map_matching/2015merged_network_file.shp"
 
     shapefile_path_trips = "shapefiles/map_matching/island_cyclist_trips.shp"
@@ -26,7 +27,9 @@ def initialize():
     id_trc_geo_list = shp_network_full["ID_TRC_GEO"].unique()
     series = pd.Series(id_trc_geo_list)
     clean_int_list = series.dropna().astype(int).tolist()
-    shp_network = shp_network_full[~shp_network_full["ID_RD"].isin(clean_int_list)].copy()
+    shp_network = shp_network_full[
+        ~shp_network_full["ID_RD"].isin(clean_int_list)
+    ].copy()
     str_tree, subsegments, subseg_metadata = create_network_rtree(shp_network)
     tree_data = (str_tree, subsegments, subseg_metadata)
     st.session_state.G = G
@@ -34,5 +37,6 @@ def initialize():
     st.session_state.shp_network_full = shp_network_full
     st.session_state.shp_trip = shp_trip
     st.session_state.tree_data = tree_data
-    st.session_state.output_df = pd.read_csv(st.session_state.output_path, index_col='index')
-
+    st.session_state.output_df = pd.read_csv(
+        st.session_state.output_path, index_col="index"
+    )
