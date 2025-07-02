@@ -40,3 +40,8 @@ def initialize():
     st.session_state.output_df = pd.read_csv(
         st.session_state.output_path, index_col="index"
     )
+    st.session_state.exit_pressed = False
+
+def handle_exit():
+    st.session_state.exit_pressed = True
+    st.session_state.output_df.to_csv(st.session_state.output_path)

@@ -4,7 +4,7 @@ import streamlit as st
 
 from displaymap import plot_trajectory_and_path
 from mapmatching import run_map_matching
-from stutils import initialize
+from stutils import initialize, handle_exit
 
 # Steps of the code
 #
@@ -63,7 +63,7 @@ if st.session_state.cached_row_index != row_index:
         )
     except Exception as e:
         st.warning(f"Mapmatching error in trip {row_index}, skipping...")
-        new_row = (row["id_origine"], None, f"MM Error:{e}")
+        new_row = (row_index, row["id_origine"], None, f"MM Error:{e}")
         df_length = len(st.session_state.output_df)
         st.session_state.output_df.loc[df_length] = new_row
         st.session_state.row_index += 1
@@ -88,38 +88,40 @@ center = row.geometry.centroid
 
 
 # Plot background network
+if not st.session_state.exit_pressed:
+    # Buttons
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("✅ No errors in path"):
+            int_path = list(map(int, path))
+            new_row = (row_index, row["id_origine"], int_path, "no")
+            df_length = len(st.session_state.output_df)
+            st.session_state.output_df.loc[df_length] = new_row
+            st.session_state.row_index += 1
+            st.rerun()
+    with col2:
+        if st.button("🟨 Minor errors (less than 3)"):
+            int_path = list(map(int, path))
+            new_row = (row_index, row["id_origine"], int_path, "minor")
+            df_length = len(st.session_state.output_df)
+            st.session_state.output_df.loc[df_length] = new_row
+            st.session_state.row_index += 1
+            # Reset logic if needed
+            st.rerun()
+    with col3:
+        if st.button("🟥 Major errors"):
+            int_path = list(map(int, path))
+            new_row = (row_index, row["id_origine"], int_path, "major")
+            df_length = len(st.session_state.output_df)
+            st.session_state.output_df.loc[df_length] = new_row
+            st.session_state.row_index += 1
+            # Reset logic if needed
+            st.rerun()
+    with col4:
+        st.button("🛑 Exit and save changes", on_click=handle_exit, key="exit_button")
 
-# Buttons
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    if st.button("✅ No errors in path"):
-        int_path = list(map(int, path))
-        new_row = (row["id_origine"], int_path, "no")
-        df_length = len(st.session_state.output_df)
-        st.session_state.output_df.loc[df_length] = new_row
-        st.session_state.row_index += 1
-        st.rerun()
-with col2:
-    if st.button("🟨 Minor errors (less than 3)"):
-        int_path = list(map(int, path))
-        new_row = (row["id_origine"], int_path, "minor")
-        df_length = len(st.session_state.output_df)
-        st.session_state.output_df.loc[df_length] = new_row
-        st.session_state.row_index += 1
-        # Reset logic if needed
-        st.rerun()
-with col3:
-    if st.button("🟥 Major errors"):
-        int_path = list(map(int, path))
-        new_row = (row["id_origine"], int_path, "major")
-        df_length = len(st.session_state.output_df)
-        st.session_state.output_df.loc[df_length] = new_row
-        st.session_state.row_index += 1
-        # Reset logic if needed
-        st.rerun()
-with col4:
-    if st.button("🛑 Exit and save changes"):
-        status_placeholder.write(f"Last trip reviewed: #{row_index}...")
-        st.success("Saving changes to correction file")
-        st.session_state.output_df.to_csv(st.session_state.output_path)
-        st.stop()
+else:
+    status_placeholder.write(f"Last trip reviewed: #{row_index}")
+    st.success("✅ Changes saved to correction file.")
+    st.write("You can now close the app.")
+    st.stop()
