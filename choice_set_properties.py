@@ -20,7 +20,6 @@ def cyclist_error(cyc_id, reason=0):
         error_id[cyc_id] = 'path_size-error'
 
 
-
 def get_path_properties(cyc_path, chosen_state=0, ini_len=0):
     """takes in a path and outputs the properties for that path"""
     path_length=0
@@ -145,7 +144,10 @@ G = nx.read_graphml("road_network_2015_with_coords.graphml")
 ADD_DEMOGRAPHICS = False
 choice_set_filepath = 'choice_set/'
 database_filepath = 'shapefiles/2015_attempt/road_properties_2015.csv'
-cyclist_trajectory_filepath = 'cyclists/cyclists_trips.csv'
+cyclist_gps_filepath = 'cyclists/cyclists_trips.csv'
+cyclist_trajectory_filepath = (
+    "validated_chosen_path/full_validation/cyclist_no_error.csv"
+)
 output_filepath = 'choice_properties/'
 check_dir(output_filepath)
 lts_filepath = 'shapefiles/LTS_links.csv'
@@ -155,13 +157,12 @@ error_filepath = 'choice_properties/error_log/'
 check_dir(error_filepath)
 error_id={}
 
+gps_df = pd.read_csv(cyclist_gps_filepath, index_col='id_origine')
 chosen_path_df = pd.read_csv(
     cyclist_trajectory_filepath,
     index_col= 'id_origine'
     )
-# Drops any rows with missing trip segments or id numbers which
-# usually correspond to blank rows.
-chosen_path_df.dropna(subset=['trip_segment','id'], inplace=True)
+
 
 lts_df = pd.read_csv(lts_filepath, index_col = 'ID_TRC')
 
@@ -219,11 +220,11 @@ for choice_set_file in trip_list:
 
 
     chosen_path = ast.literal_eval(
-        chosen_path_df['trip_segment'].loc[idnum])
+        chosen_path_df['path'].loc[idnum])
 
 
     path_dict[choice_id] = get_path_properties(
-        chosen_path, 1, ini_len=chosen_path_df['length'].loc[idnum])
+        chosen_path, 1, ini_len=gps_df['length'].loc[idnum])
     path_size_dict[choice_id]=chosen_path
     shortest_path_list.append(path_dict[choice_id]['length'])
     choice_id+=1

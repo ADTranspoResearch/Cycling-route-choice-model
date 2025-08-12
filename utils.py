@@ -93,7 +93,14 @@ def check_infinity(list_df, index_dict): #used by concat_training_data
     print("DataFrame indices containing infinity values:", inf_df_indices)
 
 
-def concat_training_data(directory_path='choice_properties/',output_path='logit_models/model_data/'): #takes the filepath where the individual choice set properties csv files are and creates a single df of all cyclists, will return the df to be used but will also save it as a csv so this can only be called once when the choice set properties are changed, and the csv can be read after instead
+def concat_training_data(directory_path='choice_properties/',output_path='logit_models/model_data/'): 
+    """
+    Takes the filepath where the individual choice set properties csv 
+    files are and creates a single df of all cyclists, will return the 
+    df to be used but will also save it as a csv so this can only be 
+    called once when the choice set properties are changed, and the csv
+    can be read after instead.
+    """
     df_list = []
     index_dict = {}
     i = 0
