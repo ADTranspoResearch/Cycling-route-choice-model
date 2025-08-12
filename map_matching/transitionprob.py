@@ -35,7 +35,7 @@ def project_point_on_edge(point:Point, edge:LineString):
     """
 
 
-def transition_probability_v2(points: set, edges:set, network:GeoDataFrame):
+def transition_probability(points: set, edges:set, network:GeoDataFrame):
     """
     Calculates the probability of transitioning between 2 edges for a given point.
 
@@ -56,7 +56,7 @@ def transition_probability_v2(points: set, edges:set, network:GeoDataFrame):
     """
 
 @profile
-def transition_probability(pt_i, pt_j, C_i, C_j, G, beta=30):
+def transition_probability_v1(pt_i, pt_j, C_i, C_j, G, beta=30):
     """
     calculates probability of taking one link to the next for all candidates of 2 pts
     """
