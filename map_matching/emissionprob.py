@@ -6,6 +6,7 @@ import math
 from shapely import distance
 from shapely.geometry import LineString, Point
 from numpy import sqrt, pi, exp
+from geopandas import GeoSeries
 
 def calculate_bearing(p1, p2):
     """calculates the bearing of the line connecting two points"""
@@ -29,11 +30,13 @@ def normal_dist_prob(X, mean=0, var=20):
     return prob
 
 
-def gaussian_distance(point, candidate_geo, var=20):
+def gaussian_distance(point, candidate_geo: GeoSeries, var=20):
     """
     Calculates the probability of a point belonging to segemnt
     takes in a point and list of candidates, optional variance parameter
     outputs a list of probabilities with the same index as the candidates
+
+
     """
     can_prob = []
     for candidate in candidate_geo:

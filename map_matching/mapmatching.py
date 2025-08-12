@@ -20,30 +20,30 @@ def run_map_matching(idx, row, tree_data, G, shp_network_full):
     trajectory = row.geometry
     # Iterate over all points along trajectory, find candidate links
     points_count += len(trajectory.coords)
-    points_records = []
+    points_records = {}
     for coord in trajectory.coords:
         x, y = coord
         pt = Point(x, y)
         candidates = k_nearest_segments(pt, tree_data[0], tree_data[1], tree_data[2], k=5)
-        candidates_geom = [entry['geometry'] for entry in candidates]
         # Step 3 - Emission Probabilities
         if len(points_records) == 0:
-            candidate_probs = gaussian_distance(pt, candidates_geom)
+            candidates['emission_probability'] = gaussian_distance(pt, candidates.geometry)
             prev_pt = pt
         else:
-            candidate_probs = emission_prob(pt, prev_pt, candidates_geom, bear_var=40, use_bearing=True)
-        points_records.append(
-            {
-                "geometry": pt,
-                "candidates": candidates,  # List of (index, segment, metadata)
-                "candidate_probs": candidate_probs,  # List of floats
-            }
-        )
+            candidates['emission_probability'] = emission_prob(pt, prev_pt, candidates.geometry, bear_var=40, use_bearing=True)
+        points_records[pt]= candidates,  # gdf containing emission prob
+
         prev_pt = pt
-    point_gdf = gpd.GeoDataFrame(points_records, geometry="geometry", crs="EPSG:32188")
+
     # Step 4 - Transition Probabilities
-    initialize_edge_lookup(G)
-    rows = list(point_gdf.iterrows())
+    for coord in trajectory.coords:
+        x, y = coord
+        pt = Point(x, y)
+        candidates = points_records[pt]
+
+# Transition probability section currently not working
+
+
     trans_dict = {}
     for i in range(len(rows) - 1):
         idx_i, row_i = rows[i]
