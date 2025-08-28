@@ -2,6 +2,7 @@
 
 import math
 import pandas as pd
+import geopandas as gpd
 import networkx as nx
 
 
@@ -41,7 +42,7 @@ def reverse_lookup(d, target_value):
     raise ValueError(f"Value {target_value} not found in dictionary.")
 
 
-def viterbi(points_df: pd.DataFrame):
+def viterbi(points_gdf: gpd.GeoDataFrame):
     """
     computes most likely sequence of states given observations
     """
@@ -50,37 +51,34 @@ def viterbi(points_df: pd.DataFrame):
     backpointer = [{}]
 
     # --- Step 1: Initialization ---
-    first_candidates = points_df.iloc[0]["candidates"]
-    first_emissions = points_df.iloc[0]["candidate_probs"]
+    first_candidates = points_gdf.iloc[0]["candidates"]
 
-    for i, candidate in enumerate(first_candidates):
-        link_id = candidate["metadata"]["ID_RD"]
-        emission_prob = first_emissions[i]
+    for i, row in first_candidates.iterrows():
+        link_id = row["ID_RD"]
+        emission_prob = row["emission_prob"]
         V[0][link_id] = math.log(emission_prob + 1e-12)  # avoid log(0)
         backpointer[0][link_id] = None
 
-    for t in range(1, len(points_df)):
+    for t in range(1, len(points_gdf)):
         V.append({})
         backpointer.append({})
 
-        current_candidates = points_df.iloc[t]["candidates"]
-        current_emissions = points_df.iloc[t]["candidate_probs"]
+        current_candidates = points_gdf.iloc[t]["candidates"]
+        current_emissions = points_gdf.iloc[t]["candidate_probs"]
 
         # 🔄 Use transition probabilities *from previous point* (t - 1)
-        transition_dict = points_df.iloc[t - 1]["transition_probs"]
+        transition_dict = points_gdf.iloc[t - 1]["transition_probs"]
 
-        for i, curr_cand in enumerate(current_candidates):
-            curr_link = curr_cand["metadata"]["ID_RD"]
-            emission_prob = current_emissions[i]
+        for i, row in current_candidates.iterrows():
+            curr_link = row["ID_RD"]
+            emission_prob = row["emission_probs"]
 
             best_score = -math.inf
             best_prev_link = None
 
             for prev_link, prev_score in V[t - 1].items():
-                transition_key = (prev_link, curr_link)
-                transition_prob = transition_dict.get(
-                    transition_key, 1e-12
-                )  # or 0.0 if you want to fully exclude
+                prev_link_index = current_candidates[current_candidates["ID_RD"]==prev_link].index[0]
+                transition_prob = row["transition_prob"][prev_link_index]
 
                 alpha = 1
                 beta = 10
@@ -96,7 +94,7 @@ def viterbi(points_df: pd.DataFrame):
 
             V[t][curr_link] = best_score
             backpointer[t][curr_link] = best_prev_link
-    last_time = len(points_df) - 1
+    last_time = len(points_gdf) - 1
     last_step_scores = V[last_time]
     best_final_link = max(last_step_scores, key=last_step_scores.get)
     path = [best_final_link]
