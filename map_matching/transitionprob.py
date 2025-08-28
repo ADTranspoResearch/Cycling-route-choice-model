@@ -54,7 +54,8 @@ def transition_probability(points: set, edges:set, network:GeoDataFrame):
             path between the projected candidate points
 
     """
-
+    transition_prob = 0
+    return transition_prob
 @profile
 def transition_probability_v1(pt_i, pt_j, C_i, C_j, G, beta=30):
     """

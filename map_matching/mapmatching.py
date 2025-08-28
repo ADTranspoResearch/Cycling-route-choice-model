@@ -12,67 +12,65 @@ from transitionprob import initialize_edge_lookup, transition_probability
 from viterbi import run_viterbi
 
 
-
 def run_map_matching(idx, row, tree_data, G, shp_network_full):
     """Runs the full map matching algorithm and returns the link path list"""
     tik = time()
-    points_count = 0
     trajectory = row.geometry
     # Iterate over all points along trajectory, find candidate links
-    points_count += len(trajectory.coords)
+    trajectory_gdf = gpd.GeoDataFrame(
+    geometry=[Point(x, y) for x, y in trajectory.coords],
+    crs="EPSG:32188"  # replace with your CRS if known
+)
     points_records = {}
-    for coord in trajectory.coords:
-        x, y = coord
-        pt = Point(x, y)
+    trajectory_gdf['candidates'] = None
+    for i, row in trajectory_gdf.iterrows():
+        pt = row.geometry
         candidates = k_nearest_segments(pt, tree_data[0], tree_data[1], tree_data[2], k=5)
+        candidates['transition_prob'] = None
         # Step 3 - Emission Probabilities
         if len(points_records) == 0:
-            candidates['emission_probability'] = gaussian_distance(pt, candidates.geometry)
+            emission_probs = gaussian_distance(pt, candidates.geometry)
             prev_pt = pt
         else:
-            candidates['emission_probability'] = emission_prob(pt, prev_pt, candidates.geometry, bear_var=40, use_bearing=True)
-        points_records[pt]= candidates,  # gdf containing emission prob
-
+            emission_probs = emission_prob(pt, prev_pt, candidates.geometry, bear_var=40, use_bearing=True)
+        candidates['emission_prob'] = emission_probs
+        trajectory_gdf.at[i, 'candidates'] = candidates
+        #trajectory_gdf.at[i, 'emission_probability'] = emission_probs 
         prev_pt = pt
 
     # Step 4 - Transition Probabilities
-    for coord in trajectory.coords:
-        x, y = coord
-        pt = Point(x, y)
-        candidates = points_records[pt]
+    for i, row in trajectory_gdf.iterrows():
+        pt = row.geometry
+        candidates = row['candidates']
+        if i + 1 < len(trajectory_gdf):
+            next_pt = trajectory_gdf.iloc[i+1].geometry
+            next_candidates = trajectory_gdf.iloc[i+1]['candidates']
+        else:
+            break
+        for idy, candidate in candidates.iterrows():
+            transition_prob_list = []
+            for next_candidate in next_candidates.geometry:
+                transition_prob = transition_probability(
+                    (pt, next_pt),
+                    (candidate, next_candidate),
+                    shp_network_full
+                )
+                transition_prob_list.append(transition_prob)
+            candidates.at[idy, 'transition_prob'] = transition_prob_list
 
-# Transition probability section currently not working
 
-
-    trans_dict = {}
-    for i in range(len(rows) - 1):
-        idx_i, row_i = rows[i]
-        idx_j, row_j = rows[i + 1]
-        point_i = row_i["geometry"]
-        point_j = row_j["geometry"]
-        candidate_i = row_i["candidates"]
-        candidate_j = row_j["candidates"]
-        trans_prob = transition_probability(
-            point_i, point_j, candidate_i, candidate_j, G
-        )
-        trans_dict[idx_i] = trans_prob
-    point_gdf["transition_probs"] = pd.Series(trans_dict)
+    trajectory_gdf.to_csv('map_matching/trajectory_transition_test.csv')
+    exit()
     # Step 5 - Hidden Markov Model
     # Apply Viterbi Algorithm
     path, node_path = run_viterbi(point_gdf, G)
     matched_links = shp_network_full[shp_network_full['ID_RD'].isin(path)].copy()
-#    print(node_path)
-#    print(path)
+    #    print(node_path)
+    #    print(path)
 
     tok = time()
-    point_time(idx, points_count, tik, tok)
+    point_time(idx, len(trajectory.coords), tik, tok)
     return path, node_path, matched_links
-
-
-
-
-
-
 
 
 # Step 3 - Emission Probabilities
