@@ -40,6 +40,31 @@ def project_point_on_edge(point:Point, edge:LineString):
     projected_point = edge.interpolate(projected_distance)
     return projected_point
 
+def insert_projection_in_graph(G: nx.Graph, edge: LineString, proj_point: Point):
+    """
+    Splits an edge in the graph at the projected point and inserts that point as a new node.
+    """
+    coords = list(edge.coords)
+    u, v = coords[0], coords[-1]
+
+    # Remove original edge if it exists
+    if G.has_edge(u, v):
+        G.remove_edge(u, v)
+
+    # Distances
+    dist_u_p = Point(u).distance(proj_point)
+    dist_p_v = proj_point.distance(Point(v))
+
+    # Add projected point as a node
+    proj_node = (proj_point.x, proj_point.y)
+    G.add_node(proj_node)
+
+    # Add two new edges
+    G.add_edge(u, proj_node, length=dist_u_p)
+    G.add_edge(proj_node, v, length=dist_p_v)
+
+    return proj_node
+
 
 def transition_probability(points: set, edges: set, network: GeoDataFrame, beta = 30):
     """
@@ -79,12 +104,10 @@ def transition_probability(points: set, edges: set, network: GeoDataFrame, beta 
             u, v = coords[k], coords[k + 1]
             G.add_edge(u, v, length=Point(u).distance(Point(v)))
 
-    # 4. Find nearest graph nodes for the projected points
-    def nearest_node(p: Point, graph):
-        return min(graph.nodes, key=lambda n: Point(n).distance(p))
+    # 4. Insert projected points into graph
 
-    start_node = nearest_node(g_proj_i, G)
-    end_node = nearest_node(g_proj_j, G)
+    start_node = insert_projection_in_graph(G, edge_i, g_proj_i)
+    end_node = insert_projection_in_graph(G, edge_j, g_proj_j)
 
     # 5. Compute shortest path distance and transition probability
     try:
@@ -92,18 +115,9 @@ def transition_probability(points: set, edges: set, network: GeoDataFrame, beta 
         deviation = abs(d_path - d_euclid)
         probability = (1 / beta) * exp(-deviation / beta)
     except (nx.NetworkXNoPath, nx.NodeNotFound):
-        d_path, deviation, probability = float("inf"), float("inf"), 0.0
+        probability = 0.0
 
-    return {
-        "pt_i": pt_i.wkt,
-        "pt_j": pt_j.wkt,
-        "edge_i": str(edge_i.wkt)[:50] + "...",
-        "edge_j": str(edge_j.wkt)[:50] + "...",
-        "gps_dist": d_euclid,
-        "net_dist": d_path,
-        "deviation": deviation,
-        "probability": probability,
-    }
+    return probability
 
 
 def transition_probabilities_for_candidates(points: tuple, candidates_i: list, candidates_j: list, network, beta: float = 30):
@@ -131,8 +145,14 @@ def transition_probabilities_for_candidates(points: tuple, candidates_i: list, c
     results = []
     for edge_i in candidates_i:
         for edge_j in candidates_j:
-            result = transition_probability({pt_i, pt_j}, {edge_i, edge_j}, network, beta)
-            results.append(result)
+            prob = transition_probability({pt_i, pt_j}, {edge_i, edge_j}, network, beta)
+            results.append({
+                "pt_i": pt_i.wkt,
+                "pt_j": pt_j.wkt,
+                "edge_i": str(edge_i.wkt)[:50] + "...",
+                "edge_j": str(edge_j.wkt)[:50] + "...",
+                "probability": prob
+            })
     return pd.DataFrame(results)
 
 
