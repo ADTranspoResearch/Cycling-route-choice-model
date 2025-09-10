@@ -3,7 +3,7 @@ import pandas as pd
 
 from candidatesearch import create_network_rtree
 from mapmatching import run_map_matching
-
+from transitionprob import build_graph
 shapefile_path_network = "shapefiles/map_matching/2015merged_network_file.shp"
 
 shapefile_path_trips = "shapefiles/map_matching/island_cyclist_trips.shp"
@@ -31,11 +31,12 @@ tree_data = (str_tree, subsegments, subseg_metadata)
 row_index = 0
 row = shp_trip.iloc[row_index]
 
-
+graph = build_graph(shp_network_full)
 path, node_path, matched_links = run_map_matching(
             row_index,
             row,
             tree_data,
             G,
             shp_network_full,
+            graph
         )
