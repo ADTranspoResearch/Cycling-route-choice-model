@@ -8,7 +8,7 @@ from shapely import Point
 from candidatesearch import k_nearest_segments
 from timeanal import point_time
 from emissionprob import emission_prob, gaussian_distance
-from transitionprob import initialize_edge_lookup, transition_probability
+from transitionprob import transition_probability, build_graph
 from viterbi import run_viterbi
 
 
@@ -39,6 +39,7 @@ def run_map_matching(idx, row, tree_data, G, shp_network_full):
         prev_pt = pt
 
     # Step 4 - Transition Probabilities
+    graph = build_graph(shp_network_full)
     for i, row in trajectory_gdf.iterrows():
         pt = row.geometry
         candidates = row['candidates']
@@ -52,18 +53,18 @@ def run_map_matching(idx, row, tree_data, G, shp_network_full):
             for next_candidate in next_candidates.geometry:
                 transition_prob = transition_probability(
                     (pt, next_pt),
-                    (candidate, next_candidate),
-                    shp_network_full
+                    (candidate.geometry, next_candidate),
+                    graph
                 )
                 transition_prob_list.append(transition_prob)
             candidates.at[idy, 'transition_prob'] = transition_prob_list
 
 
     trajectory_gdf.to_csv('map_matching/trajectory_transition_test.csv')
-    exit()
+
     # Step 5 - Hidden Markov Model
     # Apply Viterbi Algorithm
-    path, node_path = run_viterbi(point_gdf, G)
+    path, node_path = run_viterbi(trajectory_gdf, G)
     matched_links = shp_network_full[shp_network_full['ID_RD'].isin(path)].copy()
     #    print(node_path)
     #    print(path)
