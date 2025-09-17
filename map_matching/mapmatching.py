@@ -11,8 +11,8 @@ from emissionprob import emission_prob, gaussian_distance
 from transitionprob import transition_probability, build_graph
 from viterbi import run_viterbi
 
-
-def run_map_matching(idx, row, tree_data, G, shp_network_full):
+@profile
+def run_map_matching(idx, row, tree_data, G, shp_network_full, graph):
     """Runs the full map matching algorithm and returns the link path list"""
     tik = time()
     trajectory = row.geometry
@@ -25,7 +25,7 @@ def run_map_matching(idx, row, tree_data, G, shp_network_full):
     trajectory_gdf['candidates'] = None
     for i, row in trajectory_gdf.iterrows():
         pt = row.geometry
-        candidates = k_nearest_segments(pt, tree_data[0], tree_data[1], tree_data[2], k=5)
+        candidates = k_nearest_segments(pt, tree_data[0], tree_data[1], tree_data[2], k=3)
         candidates['transition_prob'] = None
         # Step 3 - Emission Probabilities
         if len(points_records) == 0:
@@ -39,7 +39,9 @@ def run_map_matching(idx, row, tree_data, G, shp_network_full):
         prev_pt = pt
 
     # Step 4 - Transition Probabilities
-    graph = build_graph(shp_network_full)
+
+    node_set = frozenset(graph.nodes)
+    count=0
     for i, row in trajectory_gdf.iterrows():
         pt = row.geometry
         candidates = row['candidates']
@@ -54,11 +56,17 @@ def run_map_matching(idx, row, tree_data, G, shp_network_full):
                 transition_prob = transition_probability(
                     (pt, next_pt),
                     (candidate.geometry, next_candidate),
-                    graph
+                    graph, node_set
                 )
                 transition_prob_list.append(transition_prob)
             candidates.at[idy, 'transition_prob'] = transition_prob_list
-
+        count+=1
+        print(f'{count} points completed')
+        if count > 4:
+            break
+        
+    print('success')
+    exit()
 
     trajectory_gdf.to_csv('map_matching/trajectory_transition_test.csv')
 
