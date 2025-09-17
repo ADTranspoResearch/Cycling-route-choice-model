@@ -14,3 +14,4 @@ notebooks/
 .ipynb_checkpoints
 __pycache__
 test/
+manual_map_matching/cyclist_raw_data
