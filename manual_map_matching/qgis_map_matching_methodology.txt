@@ -1,0 +1,22 @@
+tools:
+match trajectory
+
+clip network
+
+snap geometries to layer
+
+
+starting files:
+-road network
+-individual trajectory points layers
+
+
+processing:
+1. load road network DONE
+2. load first trajectory DONE
+3. clip network to trajectory DONE
+4. run match trajectory. DONE
+5. snap trajectory to probable path DONE
+6. save snapped trajectory DONE
+7. delete trajectory, clipped network, probable path, and snapped trajectory layers
+8. repeat from 2

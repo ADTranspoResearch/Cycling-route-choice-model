@@ -15,3 +15,5 @@ notebooks/
 __pycache__
 test/
 manual_map_matching/cyclist_raw_data
+manual_map_matching/cyclist_map_matched
+manual_map_matching/temporary_data

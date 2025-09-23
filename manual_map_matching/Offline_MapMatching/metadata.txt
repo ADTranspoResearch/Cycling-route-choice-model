@@ -1,0 +1,60 @@
+# This file contains metadata for your plugin. Since 
+# version 2.0 of QGIS this is the proper way to supply 
+# information about a plugin. The old method of 
+# embedding metadata in __init__.py will 
+# is no longer supported since version 2.0.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=Offline-MapMatching
+qgisMinimumVersion=3.0
+description=a QGIS-plugin for matching a trajectory with a network using a Hidden Markov Model and Viterbi algorithm 
+version=3.0.0
+author=Christoph Jung
+email=jagodki.cj@gmail.com
+
+about=Because of inaccuracies of the GNSS signal and/or a low data quality of the network, the positions of the trajectory and the network are differing. In many cases a simple snapping of the trajectory on the network will not work to reproduce the real track on the network. Reasons for that can be e.g. outliers in the trajectory or crossings of edges in the network. This plugin provides a statistical approach to solve the problem of offline map matching using the principles of Hidden Markov Models (HMM) and the Viterbi algorithm.
+
+tracker=https://github.com/jagodki/Offline-MapMatching/issues
+repository=https://github.com/jagodki/Offline-MapMatching
+# End of mandatory metadata
+
+# Recommended items:
+
+# Uncomment the following line and add your changelog:
+changelog=
+    3.0.0 - new algorithm to improve calculation time
+    	2.5.2 - show icon in plugin manager correctly
+	2.5.1 - make the new parameter from v2.5.0 optional to keep the plugin backward compatible
+	2.5.0 - the algorithm "reduce trajectory density" has a new parameter for keeping the last vertex/feature after processing
+	2.4.0 - add a new preprocessing algorithm (reduce trajectory density)
+	2.3.2 - avoid a rare error with the crs selector
+	2.3.1 - remove an error while unloading the plugin
+	2.3.0 - provide a processing routine to reduce the network
+	2.2.2 - remove of an error in the calculation of the transition probabilities
+	2.2.1 - remove of an error in the implementation of the Viterbi-algorithm, that could cause an empty result layer
+	2.2.0 - log the id of the trajectory point for which the search distance is too low
+	2.1.1 - allow the processing of trajectory positions with the same coordinates
+	2.1.0 - reuse routing calculations for improvement of computation time
+	2.0.0 - introduce a new parameter to avoid u-turns
+	1.1.3 - experimental version to avoid u-turns (preparation for the new major version)
+	1.1.2 - the plugin will not crash anymore, if a raster layer is loaded
+	1.1.1 - bugs according to the case of different directions of the network and the trajectory have been solved
+	1.1.0 - make the plugin accessible via the processing framework
+	1.0.3 - enable the usage of layers with geometries containing Z- and/or M-value
+	1.0.2 - edit metadata and improve exception handling
+	1.0.1 - adjust field names of result layer and some minor changes
+	1.0.0 - first release
+
+# Tags are comma separated with spaces allowed
+tags=trajectory, map matching, viterbi, hmm
+
+homepage=https://github.com/jagodki/Offline-MapMatching
+category=Vector
+icon=icons/icon.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
