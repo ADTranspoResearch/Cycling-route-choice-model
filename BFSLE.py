@@ -52,7 +52,7 @@ def manhattan(a,b):
 #lp = LineProfiler(sp_edge_removed)
 #lp.enable()
 od_filepath = 'cyclists/'
-od_filename = 'cyclist_od_list.csv'
+od_filename = 'cyclist_od_list_remove_first_last_pt.csv'
 od_df = pd.read_csv(od_filepath+od_filename)
 
 

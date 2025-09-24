@@ -18,9 +18,8 @@ def check_dir(path):
 
 
 
-graph_filepath = os.path.join(os.getcwd(), os.pardir, 'road_network_2015_with_coords.graphml')
-choice_set_rel_path = 'choice_set/'
-choice_set_filepath = os.path.join(os.getcwd(), os.pardir, choice_set_rel_path)
+graph_filepath =  'road_network_2015_with_coords.graphml'
+choice_set_filepath = 'choice_set/'
 edge_list_output_filepath = 'edge_lists/'
 check_dir(edge_list_output_filepath)
 

@@ -1,6 +1,6 @@
 import pandas as pd
 from utils import *
-filename = 'shapefiles/2015_attempt/cyclist_od.csv'
+filename = 'shapefiles/2015_attempt/cyclist_od_remove_first_last_pt.csv'
 output_filepath = 'cyclists/'
 check_dir(output_filepath)
 
@@ -27,12 +27,12 @@ for index, row in df.iterrows():
         
         other_row = other_row.iloc[0]  # Get the first (and only) row
 
-        if row['vertex_pos'] == 0 and other_row['vertex_pos'] == -1:
+        if row['vertex_pos'] == 1 and other_row['vertex_pos'] == -2:
             #origin and other row destination
             origin = row['node_id']
             dest = other_row['node_id']
 
-        elif row['vertex_pos'] == -1 and other_row['vertex_pos'] == 0:
+        elif row['vertex_pos'] == -2 and other_row['vertex_pos'] == 1:
             origin = other_row['node_id']
             dest = row['node_id']
 
@@ -45,4 +45,4 @@ for index, row in df.iterrows():
         unique_users.append(cyclist_id)
 od_df = pd.DataFrame.from_dict(od_dict, orient='index',columns=['cyclist_id', 'origin', 'destination'])
 
-od_df.to_csv(output_filepath+'cyclist_od_list.csv')
+od_df.to_csv(output_filepath+'cyclist_od_list_remove_first_last_pt.csv')
