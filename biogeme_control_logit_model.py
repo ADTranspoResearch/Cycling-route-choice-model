@@ -5,14 +5,14 @@ from biogeme import models
 import biogeme.database as db
 import pandas as pd
 
-from utils import create_training_df, idca_to_idco
+from utils import create_training_df, idca_to_idco, concat_training_data
 
 MODEL_NAME = 'base_model'
 # this cannot be changed yet,
 # TODO: must add a line that drops columns above this value
 CHOICE_SET_SIZE = 81
 
-
+#concat_training_data()
 full_df = pd.read_csv('logit_models/model_data/raw_training_data.csv')
 final_df = create_training_df(full_df,MODEL_NAME,chosen=True)
 
@@ -78,13 +78,13 @@ V = {}
 av = {}
 
 for i in range(0, CHOICE_SET_SIZE):  # 0 to 81
-    V[i] = (B_number_of_links*number_of_links[i]
-            + B_length*length[i]
+    V[i] = (#B_number_of_links*number_of_links[i]
+            B_length*length[i]
             + B_ADT_sum*ADT_sum[i]
-            + B_path_size*bio.log(path_size[i])
+            #+ B_path_size*bio.log(path_size[i])
             + B_avg_Q85_dist_w*avg_Q85_dist_w[i]
             + B_slope_sum*slope_sum[i]
-            + B_infra_ratio * infra_ratio[i]
+            #+ B_infra_ratio * infra_ratio[i]
     )
     av[i] = 1  # All alternatives are always available
 

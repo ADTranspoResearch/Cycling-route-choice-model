@@ -162,8 +162,8 @@ G = nx.read_graphml("road_network_2015_with_coords.graphml")
 choice_set_filepath = "choice_set/"
 database_filepath = "shapefiles/2015_attempt/road_properties_2015.csv"
 
-USE_UNIQUE_RATIO = True
-REMOVE_UNIQUE_LINKS = True
+USE_UNIQUE_RATIO = False
+REMOVE_UNIQUE_LINKS = False
 if USE_UNIQUE_RATIO:
     cyclist_gps_filepath = "cyclists/cyclists_trips_with_unique_ratio.csv"
     unique_ratio_limit = 0.1
@@ -171,7 +171,7 @@ else:
     cyclist_gps_filepath = "cyclists/cyclists_trips.csv"
     unique_ratio_limit = 1
 cyclist_trajectory_filepath = (
-    "validated_chosen_path/full_validation/cyclist_no_error.csv"
+    "manual_map_matching/cyclist_chosen_path.csv"
 )
 output_filepath = "choice_properties/"
 check_dir(output_filepath)
@@ -230,9 +230,6 @@ for choice_set_file in trip_list:
     # start of actual loop
     if idnum not in trip_id_list:
         print(idnum, "not in trip list, skipping...")
-        continue
-    if chosen_path_df["unique_link_ratio"].loc[idnum] > unique_ratio_limit:
-        print(idnum, f"unique ratio greater than {unique_ratio_limit}}, skipping...")
         continue
     # Initialize all required empty lists
     choice_id = 0
