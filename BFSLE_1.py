@@ -64,7 +64,7 @@ G = nx.read_graphml("road_network_2015_with_coords.graphml")
 
 choice_set_size = 80
 
-choice_set_dict = {}
+
 
 error_id={}
 

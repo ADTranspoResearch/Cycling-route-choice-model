@@ -18,3 +18,5 @@ manual_map_matching/cyclist_raw_data
 manual_map_matching/cyclist_map_matched
 manual_map_matching/temporary_data
 manual_map_matching/cyclist_modified_trajectories
+route_visualization/shapefiles
+edge_lists/*
