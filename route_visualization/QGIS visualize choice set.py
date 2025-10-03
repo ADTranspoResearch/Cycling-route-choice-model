@@ -45,3 +45,4 @@ for choice_num, edge_ids in enumerate(choice_set, start=1):
 
     # Clear selection for next loop
     road_network_layer.removeSelection()
+QgsProject.instance().removeMapLayer(road_network_layer)
