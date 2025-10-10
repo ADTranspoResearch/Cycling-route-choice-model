@@ -11,6 +11,7 @@ import pandas as pd
 
 from utils import check_dir
 from BFSLE.sptree import get_sp_tree, euclidian
+from BFSLE.weights import cyclist_edge_cost
 
 CHOICE_SET_SIZE = 80
 
@@ -43,10 +44,12 @@ for index, row in od_df.iterrows():
     od = (str(row["origin"]), str(row["destination"]))
 
     # Get original shortest path on base graph.
+        
     try:
-        sp = nx.astar_path(
-            G, od[0], od[1], heuristic=lambda u, v: euclidian(G, u, v), weight="length"
-        )
+#        sp = nx.astar_path(
+#            G, od[0], od[1], heuristic=lambda u, v: euclidian(G, u, v), weight=cyclist_edge_cost
+#        )
+        sp = nx.shortest_path(G, od[0], od[1], weight=cyclist_edge_cost)
     except nx.NetworkXNoPath:
         error_id[cyc_id] = "no path from OD"
         print(f"warning: cyclist {cyc_id} has no path from origin to destination!")
@@ -63,7 +66,7 @@ for index, row in od_df.iterrows():
         # Checks if we run out of alternative routes in the BF search.
         try:
             original_path = sp_and_removed_edge_list[counter]
-        except KeyError:
+        except IndexError:
             print(
                 f"warning: cyclist {cyc_id}'s choice set is only {len(sp_and_removed_edge_list)} long!"
             )

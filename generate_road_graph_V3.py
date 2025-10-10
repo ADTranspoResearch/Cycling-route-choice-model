@@ -8,7 +8,7 @@ shortest path (link speed, factors afecting that)
 
 import pandas as pd
 import networkx as nx
-
+from math import isnan
 
 def get_node_coords(rd_id, vertex_pos, id_name="ID_TRC"):
     x = float(
@@ -53,7 +53,7 @@ for id_trc in road_id_list:
         slope = float(lts_df.loc[(lts_df["ID_TRC"] == id_trc), "slope_edit"].iloc[0])
     except IndexError:
         slope = 0
-    if slope > 1:
+    if slope > 1 or isnan(slope):
         slope = 0
 
     G.add_edge(
@@ -119,7 +119,7 @@ for id_bk in bike_id_list:
         slope = float(lts_df.loc[(lts_df["ID_CYCL"] == id_bk), "slope_edit"].iloc[0])
     except IndexError:
         slope = 0
-    if slope > 1:
+    if slope > 1 or isnan(slope):
         slope = 0
 
     if not G.has_edge(first_node, last_node):

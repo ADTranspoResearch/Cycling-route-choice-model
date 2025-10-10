@@ -1,9 +1,13 @@
 """
 Module contains various utility functions that are used across files.
 """
+
 import os
 import pandas as pd
 import numpy as np
+import networkx as nx
+
+
 def check_dir(path):
     """
     Check if the directory exists, if not, creates it.
@@ -103,7 +107,9 @@ def create_standardizing_dict(X, override=None):
 
     if override is None:
         override = []
-    dist_df = pd.read_csv("logit_models/variable_distribution.csv", header=None)
+    dist_df = pd.read_csv(
+        "logit_models/variable_distribution.csv", header=None
+    )
     var_list = X.columns.tolist()
     dist_dict = dict(zip(dist_df[0], dist_df[1]))
     dist_dict = {
@@ -134,7 +140,8 @@ def check_infinity(list_df, index_dict):
 
 
 def concat_training_data(
-    directory_path="choice_properties/", output_path="logit_models/model_data/"
+    directory_path="choice_properties/choice_files/",
+    output_path="logit_models/model_data/",
 ):
     """
     Takes the filepath where the individual choice set properties csv
@@ -210,7 +217,9 @@ def idca_to_idco(df):
     )
 
     # Step 4: Drop all columns that start with 'chosen_' except 'chosen_route_id'
-    chosen_columns = [col for col in df_pivot.columns if col.startswith("chosen_")]
+    chosen_columns = [
+        col for col in df_pivot.columns if col.startswith("chosen_")
+    ]
     df_pivot = df_pivot.drop(columns=chosen_columns)
 
     # Merge the chosen_route with the pivoted DataFrame
