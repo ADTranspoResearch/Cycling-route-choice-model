@@ -4,16 +4,17 @@ cyclists origin and destination points. For each cyclist it saves a JSON file co
 a list of lists of node ids that make up the alternate paths for the cyclist in the
 networkx graph.
 """
+
 import json
 
 import networkx as nx
 import pandas as pd
 
 from utils import check_dir
-from BFSLE.sptree import get_sp_tree, euclidian
+from BFSLE.sptree import get_sp_tree, drop_similar_paths
 from BFSLE.weights import cyclist_edge_cost
 
-CHOICE_SET_SIZE = 80
+CHOICE_SET_SIZE = 40
 
 output_path = "choice_set/"
 error_id_path = "choice_set/Past Error ID/"
@@ -33,26 +34,28 @@ error_id = {}
 short_set_count = 0
 # loop through all cyclists
 for index, row in od_df.iterrows():
+    cyc_id = int(row["cyclist_id"])
 
     # sp_and_removed_edge_dict holds the alternative paths and what
     # edges were removed from the graph when generated.
     sp_and_removed_edge_list = []
     counter = 0
-    cyc_id = int(row["cyclist_id"])
 
     # Origin and destination nodes for cyclist.
     od = (str(row["origin"]), str(row["destination"]))
 
     # Get original shortest path on base graph.
-        
+
     try:
-#        sp = nx.astar_path(
-#            G, od[0], od[1], heuristic=lambda u, v: euclidian(G, u, v), weight=cyclist_edge_cost
-#        )
+        #        sp = nx.astar_path(
+        #            G, od[0], od[1], heuristic=lambda u, v: euclidian(G, u, v), weight=cyclist_edge_cost
+        #        )
         sp = nx.shortest_path(G, od[0], od[1], weight=cyclist_edge_cost)
     except nx.NetworkXNoPath:
         error_id[cyc_id] = "no path from OD"
-        print(f"warning: cyclist {cyc_id} has no path from origin to destination!")
+        print(
+            f"warning: cyclist {cyc_id} has no path from origin to destination!"
+        )
         continue
     sp_and_removed_edge_list.append({"sp": sp, "removed_edges": []})
 
@@ -70,26 +73,36 @@ for index, row in od_df.iterrows():
             print(
                 f"warning: cyclist {cyc_id}'s choice set is only {len(sp_and_removed_edge_list)} long!"
             )
-            error_id[cyc_id] = f"choice set size, {len(sp_and_removed_edge_list)}"
-            short_set_count+=1
+            error_id[cyc_id] = (
+                f"choice set size, {len(sp_and_removed_edge_list)}"
+            )
+            short_set_count += 1
             break
         layer_sp = get_sp_tree(
-            G, original_path["sp"], od, original_path["removed_edges"], remaining_alts
+            G,
+            original_path["sp"],
+            od,
+            original_path["removed_edges"],
+            remaining_alts,
         )
-        sp_and_removed_edge_list.extend(layer_sp)
-        counter+=1
+        # Checks path similarity, only keeping dissimilar paths.
+        alternative_extension = drop_similar_paths(
+            layer_sp, sp_and_removed_edge_list, similarity=0.8
+        )
+        sp_and_removed_edge_list.extend(alternative_extension)
+        counter += 1
 
     # Save the cyclist's choice set to a JSON file.
     choice_set_filename = f"{cyc_id}_choice_set.json"
     print(f"{cyc_id}_choice_set.json")
     sp_list = [d["sp"] for d in sp_and_removed_edge_list]
-    with open(output_path+choice_set_filename, 'w') as file:
+    with open(output_path + choice_set_filename, "w") as file:
         json.dump(sp_list, file)
 
 
 # Currently not saving the cyclist ids that had errors
 print(f"{len(error_id)} cyclist trips had issues")
-print(f"{short_set_count} cyclists have less than 80 choices")
+print(f"{short_set_count} cyclists have less than {CHOICE_SET_SIZE} choices")
 
 # function for path weight
 # get_cycling_cost(node_1, node_2, edge_attributes):

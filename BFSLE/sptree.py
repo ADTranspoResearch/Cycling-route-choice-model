@@ -12,7 +12,9 @@ def euclidian(G, a, b):
     x1, y1 = G.nodes[a]["x"], G.nodes[a]["y"]
     x2, y2 = G.nodes[b]["x"], G.nodes[b]["y"]
 
-    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+    distance = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+#    print(f"heuristic: {distance/cyclist_speed}")
+    return (distance)
 
 
 def manhattan(G, a, b):
@@ -86,6 +88,7 @@ def get_sp_tree(
                 heuristic=lambda u, v: euclidian(G, u, v),
                 weight=cyclist_edge_cost,
             )
+#            sp = nx.shortest_path(G, od[0], od[1], weight=cyclist_edge_cost)
         except nx.NetworkXNoPath:
             continue
         finally:
@@ -102,3 +105,38 @@ def get_sp_tree(
         G.add_edge(u, v, **attr)
 
     return tree_level_sp_list
+
+
+def drop_similar_paths(alts: list, choice_set, similarity=0.9):
+    """
+    Checks how similar the candidate alternatives are to paths already
+    in the choice set. 
+
+    Returns a list that can be appeneded to the choice set containing
+    only the unique paths specified by the similarity coefficient.
+
+    Parameters:
+    alts - list: Paths whose uniqueness will be evaluated.
+    choice_set - list: Previously accepted choice set alternatives.
+    similarity - float: % value of how similar an alternative must be
+        to be discarded.
+    
+    returns - list: all alts that meet similarity threshold.
+    """
+
+    unique_alts = []
+    for i, dictionary in enumerate(alts):
+        similar = False
+        alt_path = dictionary["sp"]
+        alt_set = set(alt_path)
+        for choice in choice_set:
+            # Check for match
+            choice = set(choice["sp"])
+            intersection = alt_set & choice
+            if len(intersection) / len(alt_set) > similarity:
+                similar = True
+                break
+        if not similar:
+            choice_set.append(alts[i])
+            unique_alts.append(alts[i])
+    return unique_alts

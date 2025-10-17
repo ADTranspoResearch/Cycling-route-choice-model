@@ -33,8 +33,8 @@ def compare_point_geometries(gdf1: gpd.GeoDataFrame, gdf2: gpd.GeoDataFrame, ign
         # Compare row by row using WKT strings
         return all(g1.equals(g2) for g1, g2 in zip(gdf1.geometry, gdf2.geometry))
 
-#parent_directory = "C:/Users/adapic/Documents/Cycling Route Choice Model/git/Cycling-route-choice-model/manual_map_matching/"
-parent_directory = "J:/Documents/SURE/cycling route choice model/github/Cycling-route-choice-model/manual_map_matching/"
+parent_directory = "C:/Users/adapic/Documents/Cycling Route Choice Model/git/Cycling-route-choice-model/manual_map_matching/"
+#parent_directory = "J:/Documents/SURE/cycling route choice model/github/Cycling-route-choice-model/manual_map_matching/"
 
 
 raw_folder = "cyclist_raw_data"

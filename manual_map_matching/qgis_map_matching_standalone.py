@@ -80,14 +80,14 @@ QgsApplication.processingRegistry().addProvider(provider)
 
 
 parent_directory = "C:/Users/adapic/Documents/Cycling Route Choice Model/git/Cycling-route-choice-model/manual_map_matching/"
-#parent_directory = "J:/Documents/SURE/cycling route choice model/github/Cycling-route-choice-model/manual_map_matching/"
+# parent_directory = "J:/Documents/SURE/cycling route choice model/github/Cycling-route-choice-model/manual_map_matching/"
 matched_trajectory_output_folder = "cyclist_map_matched/"
 temporary_folder = "temporary_data"
 road_network_filename = "road_network.shp"
 road_network = QgsVectorLayer(parent_directory+road_network_filename, "road_network", "ogr")
 
 clear_folder(parent_directory+temporary_folder)
-    
+
 
 trajectory_folder = "cyclist_raw_data"
 trajectory_file_list = glob.glob(os.path.join(parent_directory+trajectory_folder,"*.shp"))
@@ -96,6 +96,8 @@ matched_file_list = glob.glob(os.path.join(parent_directory+matched_trajectory_o
 
 matched_basenames = [os.path.basename(path) for path in matched_file_list]
 
+error_dict = {-1: 0, -2: 0, -3: 0, -4: 0, -5: 0, -6: 0}
+total_time = 0
 
 for filename in trajectory_file_list:
     cylist_basename = os.path.basename(filename)
@@ -114,7 +116,7 @@ for filename in trajectory_file_list:
     trajectory = processing.run("omm:reduce_trajectory_density", {
         'TRAJECTORY':full_trajectory,
         'KEEP_LAST_FEATURE':False,
-        'DISTANCE':50,
+        'DISTANCE':25,
         'OUTPUT':traj_tmp_path
         })
     debug_traject = parent_directory+trajectory_folder+"/id_origine_52.shp"
@@ -133,15 +135,15 @@ for filename in trajectory_file_list:
 
     #Run map matching
     max_search_distance = largest_shortest_distance(trajectory_layer, clipped_network_layer) 
-    if max_search_distance >50:
-        print('max search greater than 50')
-        max_search_distance = 20
     features = 0
     matching_search_distance = max_search_distance
     print(f"initial search:{matching_search_distance}")
-    attempts = 0
-    while features == 0 and attempts < 5 :
+
+    successful_match = False
+    run_time = 0
+    while True:
         if max_search_distance >40:
+            print("max_search distance too high, skipping...")
             break
         matched_path = processing.run("omm:match_trajectory", {
             'NETWORK':clipped_network_layer,
@@ -151,23 +153,40 @@ for filename in trajectory_file_list:
             'TYPE':0,
             'OUTPUT':'TEMPORARY_OUTPUT'
             })
-        features = matched_path["OUTPUT"].featureCount()
-        matching_search_distance += 3
-        attempts +=1
+        if int(matched_path["ERROR_CODE"]) != 0:
+            error_dict[matched_path["ERROR_CODE"]] +=1
+            error = matched_path["ERROR_CODE"]
+            print(f"error {error}, skipping...")
+            run_time += float(matched_path["COMPUTATION_TIME"])
+            break
+        if int(matched_path["ERROR_CODE"]) == -1:
+            # Max search distance too low
+            matching_search_distance += 3
+            print(f"search distance too low, trying {matching_search_distance}")
+            run_time += float(matched_path["COMPUTATION_TIME"])
+            continue
+        if matched_path["OUTPUT"].featureCount() != 0:
+            successful_match = True
+        run_time += float(matched_path["COMPUTATION_TIME"])
+        break
+        
     print(matching_search_distance,"final distance")
 #    if features != 0:
 #        QgsProject.instance().addMapLayer(matched_path["OUTPUT"])
-
-    processing.run("native:snapgeometries", {
-        'INPUT':full_trajectory,
-        'REFERENCE_LAYER':matched_path["OUTPUT"],
-        'TOLERANCE':max_search_distance,
-        'BEHAVIOR':3,
-        'OUTPUT':parent_directory+matched_trajectory_output_folder+f"id_origine_{cyclist_id}.shp"
-        })
-    print(f'cylist {cyclist_id}')
+    if successful_match:
+        processing.run("native:snapgeometries", {
+            'INPUT':full_trajectory,
+            'REFERENCE_LAYER':matched_path["OUTPUT"],
+            'TOLERANCE':200,
+            'BEHAVIOR':1,
+            'OUTPUT':parent_directory+matched_trajectory_output_folder+f"id_origine_{cyclist_id}.shp"
+            })
+        print(f'cylist {cyclist_id}')
+    print(f"time for cyclist {cyclist_id}: {run_time}")
+    total_time+=run_time
 
 print("worked")
+print(f"total time taken: {total_time}")
 
 QgsProject.instance().removeAllMapLayers()
 qgs.exitQgis()
@@ -181,11 +200,3 @@ del matched_path
 # Force cleanup
 import gc
 gc.collect()
-
-
-
-
-
-
-
- 

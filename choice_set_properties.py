@@ -9,7 +9,6 @@ from datetime import datetime
 import networkx as nx
 import pandas as pd
 from utils import check_dir, level_of_effort
-from remove_unique_links import find_unique_edges
 
 def cyclist_error(cyc_id, reason=0):
     """prints problematic cyclist id and appends to error_id dict"""
@@ -43,31 +42,51 @@ def get_path_properties(cyc_path, chosen_state=0, ini_len=0):
     lts_4 = 0
     if ini_len != 0:
         path_length = int(ini_len)
-    for edge in cyc_path:
+    skip_node = 0
+    for i in range(len(cyc_path)-1):
+        j = i + 1
+        if skip_node>0:
+            skip_node-=1
+            continue
+        try:
+            edge = int(G[str(cyc_path[i])][str(cyc_path[j])]["ID_RD"])
+        except KeyError:
+            try:
+                edge = int(G[str(cyc_path[i-1])][str(cyc_path[j])]["ID_RD"])
+            except:
+                try:
+                    edge = int(G[str(cyc_path[i])][str(cyc_path[j+1])]["ID_RD"])
+                    skip_node+=1
+                except:
+                    try:
+                        edge = int(G[str(cyc_path[i-1])][str(cyc_path[j+1])]["ID_RD"])
+                        skip_node+=1
+                    except:
+                        return None
         num_links += 1
-        if int(edge) == 1607918:
+        if edge == 1607918:
             pass
-        if int(edge) not in db_df.index:
+        if edge not in db_df.index:
             not_included_links += 1
             continue
 
-        edge_length = pd.Series(db_df["length"].loc[int(edge)]).iloc[0]
+        edge_length = pd.Series(db_df["length"].loc[edge]).iloc[0]
         if ini_len == 0:
             path_length += int(edge_length)
 
         if (
-            int(edge) in db_df["ID_TRC"].values
-            and pd.Series(db_df["ID_TRC"].loc[int(edge)]).iloc[0] in lts_df.index
+            edge in db_df["ID_TRC"].values
+            and pd.Series(db_df["ID_TRC"].loc[edge]).iloc[0] in lts_df.index
         ):
 
             slope = pd.Series(
-                lts_df["slope"].loc[db_df["ID_TRC"].loc[int(edge)]]
+                lts_df["slope"].loc[db_df["ID_TRC"].loc[edge]]
                 ).iloc[0]
             if slope != -8888 and slope != -9999:
                 slope_list.append(slope)
                 loe_list.append(slope * edge_length)
 
-            lts = pd.Series(lts_df["lts"].loc[db_df["ID_TRC"].loc[int(edge)]]).iloc[0]
+            lts = pd.Series(lts_df["lts"].loc[db_df["ID_TRC"].loc[edge]]).iloc[0]
             if lts not in (-8825, -9999, -8440):
                 lts_list.append(lts)
                 lts_weight_list.append(lts * edge_length)
@@ -80,12 +99,12 @@ def get_path_properties(cyc_path, chosen_state=0, ini_len=0):
             elif lts == 4:
                 lts_4 += edge_length
 
-            adt = pd.Series(lts_df["ADT"].loc[db_df["ID_TRC"].loc[int(edge)]]).iloc[0]
+            adt = pd.Series(lts_df["ADT"].loc[db_df["ID_TRC"].loc[edge]]).iloc[0]
             if adt not in (-8888, -9999):
                 adt_list.append(adt)
                 adt_weight_list.append(adt * edge_length)
 
-            q85 = pd.Series(lts_df["Q85"].loc[db_df["ID_TRC"].loc[int(edge)]]).iloc[0]
+            q85 = pd.Series(lts_df["Q85"].loc[db_df["ID_TRC"].loc[edge]]).iloc[0]
             if q85 not in (-8888, -9999):
                 q85_list.append(q85)
                 q85_weight_list.append(q85 * edge_length)
@@ -100,7 +119,7 @@ def get_path_properties(cyc_path, chosen_state=0, ini_len=0):
             lts_weight_list.append(lts * edge_length)
 
         if float(edge) in db_df["ID"].values:
-            cycl_length += pd.Series(db_df["length"].loc[int(edge)]).iloc[0]
+            cycl_length += pd.Series(db_df["length"].loc[edge]).iloc[0]
     # pylint: disable=C0301
     # Breaking up the dictionary into multiple dicts to
     # make it more readable
@@ -156,7 +175,7 @@ def get_path_properties(cyc_path, chosen_state=0, ini_len=0):
 
 # pylint: enable=C0301
 
-G = nx.read_graphml("road_network_2015_with_coords.graphml")
+G = nx.read_graphml("road_network_2015_with_coords_v3.graphml")
 
 
 choice_set_filepath = "choice_set/"
@@ -171,7 +190,7 @@ else:
     cyclist_gps_filepath = "cyclists/cyclists_trips.csv"
     unique_ratio_limit = 1
 cyclist_trajectory_filepath = (
-    "manual_map_matching/cyclist_chosen_path.csv"
+    "manual_map_matching/cyclist_chosen_path_node.csv"
 )
 output_filepath = "choice_properties/"
 check_dir(output_filepath)
@@ -236,20 +255,24 @@ for choice_set_file in trip_list:
     path_dict = {}  # key=alt path id: value=properties of alternative
     path_size_dict = {}  # key=alt path id: value=list of edges in path
     shortest_path_list = []  # contains length of all paths in choice set
-    print("cyclist:", idnum)
+
 
     with open(f"{choice_set_filepath}{idnum}_choice_set.json", "r") as json_file:
         choice_set = json.load(json_file)
 
-    chosen_path = ast.literal_eval(chosen_path_df["path"].loc[idnum])
-    if REMOVE_UNIQUE_LINKS:
-        choice_set_links, unique_chosen = find_unique_edges(chosen_path, choice_set, G)
+    chosen_path = ast.literal_eval(chosen_path_df["node_path"].loc[idnum])
+#    if REMOVE_UNIQUE_LINKS:
+#        choice_set_links, unique_chosen = find_unique_edges(chosen_path, choice_set, G)
 
-        chosen_path = [item for item in chosen_path if item not in unique_chosen]
-
-    path_dict[choice_id] = get_path_properties(
+#        chosen_path = [item for item in chosen_path if item not in unique_chosen]
+    properties = get_path_properties(
         chosen_path, 1, ini_len=gps_df["length"].loc[idnum]
     )
+    if properties is None:
+        print(idnum, "failed chosen path properties, skipping...")
+        continue
+    print("cyclist:", idnum)
+    path_dict[choice_id] = properties
     path_size_dict[choice_id] = chosen_path
     shortest_path_list.append(path_dict[choice_id]["length"])
     choice_id += 1
@@ -258,17 +281,17 @@ for choice_set_file in trip_list:
     # key:choice_id value:edge_path_list and then loop through
     # creating PS factor and THEN run get_properties_function
     for path in choice_set:
+        path_dict[choice_id] = get_path_properties(path, 0)
+        shortest_path_list.append(path_dict[choice_id]["length"])
+        choice_id += 1
         edge_path_list = []
         # Appends all the edges used in the path to edge_path_list
         # and assigns this list to path_size dict with alt_id as key
-        for i in range(0, (len(path) - 1)):
+        for i in range(len(path) - 1):
             j = i + 1
 
             edge_path_list.append(G.edges[path[i], path[j]]["ID_RD"])
         path_size_dict[choice_id] = edge_path_list
-        path_dict[choice_id] = get_path_properties(edge_path_list, 0)
-        shortest_path_list.append(path_dict[choice_id]["length"])
-        choice_id += 1
 
     # section for getting the path size factor
     shortest_path_len = min(shortest_path_list)
