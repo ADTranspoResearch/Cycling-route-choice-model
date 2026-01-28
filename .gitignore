@@ -20,3 +20,4 @@ manual_map_matching/temporary_data
 manual_map_matching/cyclist_modified_trajectories
 route_visualization/shapefiles
 edge_lists/*
+choice_properties/*
